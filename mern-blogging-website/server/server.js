@@ -60,7 +60,9 @@ server.use(cors({
       'http://localhost:5173', // Vite dev server (main app)
       'http://localhost:5174', // Vite dev server (admin panel)
       'http://localhost:3000', // Local backend
-      'https://prismatic-starship-137fe3.netlify.app' // Production frontend
+      'https://prismatic-starship-137fe3.netlify.app', // Old production frontend
+      'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
+      'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app' // Vercel preview domain
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -81,7 +83,9 @@ server.options('*', cors({
       'http://localhost:5173', // Vite dev server (main app)
       'http://localhost:5174', // Vite dev server (admin panel)
       'http://localhost:3000', // Local backend
-      'https://prismatic-starship-137fe3.netlify.app' // Production frontend
+      'https://prismatic-starship-137fe3.netlify.app', // Old production frontend
+      'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
+      'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app' // Vercel preview domain
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
