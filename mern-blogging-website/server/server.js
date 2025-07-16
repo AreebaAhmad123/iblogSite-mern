@@ -643,6 +643,13 @@ server.post("/api/login", csrfProtection, csrfErrorHandler, validateLoginInput, 
         // Set cookies for local development (secure: false, sameSite: 'lax')
         res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
         res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        console.log("[LOGIN] User admin status from DB:", {
+            admin: user.admin,
+            super_admin: user.super_admin,
+            adminType: typeof user.admin,
+            superAdminType: typeof user.super_admin
+        });
+        
         return res.status(200).json({
             message: "Login successful. You are now logged in.",
             user: {
@@ -2302,6 +2309,13 @@ server.post('/api/google-auth', async (req, res) => {
         // Set cookies for local development (secure: false, sameSite: 'lax')
         res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
         res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        console.log("[GOOGLE AUTH] User admin status from DB:", {
+            admin: user.admin,
+            super_admin: user.super_admin,
+            adminType: typeof user.admin,
+            superAdminType: typeof user.super_admin
+        });
+        
         return res.status(200).json({
             message: "Google authentication successful!",
             user: {
