@@ -32,7 +32,8 @@ const UserAuthForm = () => {
     try {
       console.log("[LOGIN] Sending request to:", import.meta.env.VITE_SERVER_DOMAIN + "/api" + serverRoute, formData);
       
-      const csrfToken = csrfManager.getCSRFToken();
+      // Don't send CSRF token for Google auth requests since they don't need CSRF protection
+      const csrfToken = serverRoute === "/google-auth" ? null : csrfManager.getCSRFToken();
       const response = await axios.post(
         import.meta.env.VITE_SERVER_DOMAIN + "/api" + serverRoute, 
         formData,
