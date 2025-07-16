@@ -75,7 +75,8 @@ server.use(cors({
   credentials: true, // Allow cookies and credentials
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-Content-Type-Options', 'X-Frame-Options'],
-  exposedHeaders: ['X-Total-Count']
+  exposedHeaders: ['X-Total-Count'],
+  optionsSuccessStatus: 200
 }));
 // Handle preflight requests for all routes
 server.options('*', cors({
@@ -144,13 +145,14 @@ server.use(helmet({
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       scriptSrc: ["'self'"], // No 'unsafe-inline' or 'unsafe-eval'
       connectSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'", "https://accounts.google.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
   },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 
 // Rate limiting
