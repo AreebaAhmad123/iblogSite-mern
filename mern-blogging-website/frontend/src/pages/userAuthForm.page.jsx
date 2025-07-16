@@ -37,7 +37,8 @@ const UserAuthForm = ({ type }) => {
 
   useEffect(() => {
     // Fetch CSRF token on mount to set the CSRF cookie
-    axios.get(`${import.meta.env.VITE_SERVER_DOMAIN}/api/csrf-token`, { withCredentials: true });
+    const baseUrl = import.meta.env.VITE_SERVER_DOMAIN?.replace(/\/$/, '') || '';
+    axios.get(`${baseUrl}/api/csrf-token`, { withCredentials: true });
   }, []);
 
   const userAuththroughServer = async (serverRoute, formData) => {
@@ -54,8 +55,10 @@ const UserAuthForm = ({ type }) => {
         headers['X-CSRF-Token'] = csrfToken;
       }
       
+      // Ensure no double slashes in URL
+      const baseUrl = import.meta.env.VITE_SERVER_DOMAIN?.replace(/\/$/, '') || '';
       const response = await axios.post(
-        import.meta.env.VITE_SERVER_DOMAIN + "/api" + serverRoute, 
+        `${baseUrl}/api${serverRoute}`, 
         formData,
         {
           withCredentials: true,
@@ -213,7 +216,8 @@ const UserAuthForm = ({ type }) => {
         let formData = {
             id_token: idToken
         }
-        console.log("[LOGIN] Sending request to:", import.meta.env.VITE_SERVER_DOMAIN + "/api" + serverRoute);
+        const baseUrl = import.meta.env.VITE_SERVER_DOMAIN?.replace(/\/$/, '') || '';
+        console.log("[LOGIN] Sending request to:", `${baseUrl}/api${serverRoute}`);
         userAuththroughServer(serverRoute, formData)
     })
     .catch(err => {
