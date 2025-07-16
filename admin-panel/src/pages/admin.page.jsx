@@ -188,14 +188,25 @@ const AdminPanel = () => {
 
 
   // Check if user is admin
+  console.log("[ADMIN PANEL] User auth data:", userAuth);
+  console.log("[ADMIN PANEL] Admin check:", {
+    admin: userAuth?.admin,
+    super_admin: userAuth?.super_admin,
+    adminType: typeof userAuth?.admin,
+    superAdminType: typeof userAuth?.super_admin
+  });
+  
   const isAdmin = userAuth?.admin === true || userAuth?.super_admin === true;
+  console.log("[ADMIN PANEL] Is admin result:", isAdmin);
   
   // Redirect to login if not authenticated
   if (!userAuth?.access_token) {
+    console.log("[ADMIN PANEL] No access token, redirecting to login");
     return <Navigate to="/login" replace />;
   }
   
   if (!isAdmin) {
+    console.log("[ADMIN PANEL] Access denied - not admin");
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">

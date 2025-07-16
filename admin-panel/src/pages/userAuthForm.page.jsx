@@ -57,8 +57,15 @@ const UserAuthForm = () => {
         }
         
         // Check if user is admin
+        console.log("[LOGIN] User admin status:", {
+          admin: data.user.admin,
+          super_admin: data.user.super_admin,
+          fullUser: data.user
+        });
+        
         if (!data.user.admin && !data.user.super_admin) {
           toast.error('Access denied. Admin privileges required.');
+          console.log("[LOGIN] Access denied - user is not admin");
           return;
         }
         

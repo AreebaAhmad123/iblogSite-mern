@@ -67,7 +67,9 @@ server.use(cors({
       'https://prismatic-starship-137fe3.netlify.app', // Old production frontend
       'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
       'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app', // Vercel preview domain
-      'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app' // New Vercel domain
+      'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app', // New Vercel domain
+      'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app', // Admin panel domain
+      'https://iblog-site-mern-admin.vercel.app' // Admin panel production domain
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -92,7 +94,9 @@ server.options('*', cors({
       'https://prismatic-starship-137fe3.netlify.app', // Old production frontend
       'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
       'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app', // Vercel preview domain
-      'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app' // New Vercel domain
+      'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app', // New Vercel domain
+      'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app', // Admin panel domain
+      'https://iblog-site-mern-admin.vercel.app' // Admin panel production domain
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -582,8 +586,8 @@ server.post("/api/signup", csrfProtection, csrfErrorHandler, validateSignupInput
             { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
         );
         // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
-        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
         return res.status(201).json({
             message: "Signup successful. Please verify your email.",
             user: {
@@ -641,8 +645,8 @@ server.post("/api/login", csrfProtection, csrfErrorHandler, validateLoginInput, 
             { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
         );
         // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
-        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
         console.log("[LOGIN] User admin status from DB:", {
             admin: user.admin,
             super_admin: user.super_admin,
@@ -735,7 +739,7 @@ server.post("/api/refresh-token", async (req, res) => {
         );
         
         // Set new access token cookie
-        res.cookie('access_token', newAccessToken, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        res.cookie('access_token', newAccessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
         
         return res.status(200).json({ 
             message: "Token refreshed successfully",
@@ -2307,8 +2311,8 @@ server.post('/api/google-auth', async (req, res) => {
             { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
         );
         // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
-        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
         console.log("[GOOGLE AUTH] User admin status from DB:", {
             admin: user.admin,
             super_admin: user.super_admin,
@@ -2588,7 +2592,7 @@ server.get('/api/verify-user', async (req, res) => {
                 }
             );
             // Set cookies for local development (secure: false, sameSite: 'lax')
-            res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+            res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
             return res.status(200).json({
                 message: "User already verified. You are now logged in.",
                 user: {
@@ -2626,7 +2630,7 @@ server.get('/api/verify-user', async (req, res) => {
             }
         );
         // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
         return res.status(200).json({ 
             message: "Email verified! You are now logged in.",
             user: {
