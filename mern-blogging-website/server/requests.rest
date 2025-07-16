@@ -1,0 +1,12 @@
+# POST http://localhost:3000/get-blog
+# Content-Type: application/json
+
+# {
+#     "blog_id":"Story-of-Hazrat-Ali-r-a-tdJIno1N0E-aIceFpPuF4"
+# }
+POST http://localhost:3000/get-profile
+Content-Type: application/json
+
+{
+    "username":"areebaahmad703"
+}

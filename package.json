@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "type": "module",
+    "axios": "^1.10.0",
+    "cookie-parser": "^1.4.7",
+    "csurf": "^1.11.0",
+    "react-toastify": "^11.0.5"
+  }
+}
