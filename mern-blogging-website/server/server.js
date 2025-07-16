@@ -2310,9 +2310,19 @@ server.post('/api/google-auth', async (req, res) => {
             process.env.SECRET_ACCESS_KEY,
             { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
         );
-        // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
-        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        // Set cookies for cross-origin requests
+        res.cookie('access_token', access_token, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'none', 
+            maxAge: 1000 * 60 * 60 * 24 
+        });
+        res.cookie('refresh_token', refresh_token, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'none', 
+            maxAge: 1000 * 60 * 60 * 24 * 7 
+        });
         console.log("[GOOGLE AUTH] User admin status from DB:", {
             admin: user.admin,
             super_admin: user.super_admin,
