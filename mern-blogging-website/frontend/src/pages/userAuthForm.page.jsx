@@ -44,16 +44,22 @@ const UserAuthForm = ({ type }) => {
     try {
       
       const csrfToken = csrfManager.getCSRFToken();
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      };
+      
+      // Only add CSRF token for routes that require it (not google-auth)
+      if (serverRoute !== "/google-auth" && csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+      
       const response = await axios.post(
         import.meta.env.VITE_SERVER_DOMAIN + "/api" + serverRoute, 
         formData,
         {
           withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {})
-          }
+          headers
         }
       );
 
@@ -207,9 +213,11 @@ const UserAuthForm = ({ type }) => {
         let formData = {
             id_token: idToken
         }
+        console.log("[LOGIN] Sending request to:", import.meta.env.VITE_SERVER_DOMAIN + "/api" + serverRoute);
         userAuththroughServer(serverRoute, formData)
     })
     .catch(err => {
+        console.log("[LOGIN] Error during login:", err);
         toast.error("trouble login through google");
         return console.log(err)
     })
