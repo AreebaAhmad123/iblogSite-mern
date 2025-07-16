@@ -48,6 +48,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const server = express();
+
+// Trust proxy for production deployment (Railway, Vercel, etc.)
+server.set('trust proxy', 1);
+
 let PORT = process.env.PORT || 3000;
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/; // Enhanced password regex
@@ -186,7 +190,10 @@ const authLimiter = rateLimit({
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
   delayAfter: 50, // allow 50 requests per 15 minutes, then...
-  delayMs: 500 // begin adding 500ms of delay per request above 50
+  delayMs: (used, req) => {
+    const delayAfter = req.slowDown.limit;
+    return (used - delayAfter) * 500;
+  }
 });
 
 server.use(speedLimiter);
@@ -674,7 +681,8 @@ server.post("/api/validate-token", verifyJWT, (req, res) => {
 // Token refresh endpoint
 server.post("/api/refresh-token", async (req, res) => {
     try {
-        const { refreshToken } = req.body;
+        // Get refresh token from cookie instead of request body
+        const refreshToken = req.cookies['refresh_token'];
         
         if (!refreshToken) {
             return res.status(400).json({ error: "Refresh token is required" });
@@ -694,6 +702,14 @@ server.post("/api/refresh-token", async (req, res) => {
             return res.status(401).json({ error: "User not found" });
         }
 
+        if (!user.verified) {
+            return res.status(401).json({ error: "User account not verified" });
+        }
+
+        if (!user.active) {
+            return res.status(403).json({ error: "Your account is deactivated. Please contact support or an admin." });
+        }
+
         // Generate new access token
         const newAccessToken = jwt.sign(
             { 
@@ -710,10 +726,13 @@ server.post("/api/refresh-token", async (req, res) => {
                 issuer: JWT_ISSUER
             }
         );
-        // Set cookies for local development (secure: false, sameSite: 'lax')
+        
+        // Set new access token cookie
         res.cookie('access_token', newAccessToken, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        
         return res.status(200).json({ 
-            message: "Token refreshed successfully"
+            message: "Token refreshed successfully",
+            access_token: newAccessToken // Return access token for client-side storage
         });
     } catch (err) {
         console.error('Token refresh error:', err);
