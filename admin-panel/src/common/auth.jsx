@@ -25,18 +25,17 @@ export const validateToken = async (token) => {
 };
 
 // Enhanced token refresh function
-export const refreshAccessToken = async (refreshToken) => {
-    if (!refreshToken) return null;
-    
+export const refreshAccessToken = async () => {
     try {
         const response = await axios.post(
             `${import.meta.env.VITE_SERVER_DOMAIN}/api/refresh-token`,
-            { refreshToken },
+            {},
             {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                timeout: 10000
+                timeout: 10000,
+                withCredentials: true // Use cookies for refresh token
             }
         );
         return response.data.access_token;

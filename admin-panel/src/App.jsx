@@ -28,13 +28,10 @@ const App = () => {
       const stored = localStorage.getItem('userAuth');
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Normalize admin property
-        if (parsed && typeof parsed === 'object') {
-          if (parsed.admin !== undefined && parsed.isAdmin === undefined) {
-            parsed.isAdmin = parsed.admin;
-          }
+        // Ensure access_token exists for authentication
+        if (parsed && parsed.access_token) {
+          return parsed;
         }
-        return parsed;
       }
       return null;
     } catch {
@@ -44,12 +41,6 @@ const App = () => {
   const [userAuth, setUserAuthState] = useState(getInitialUserAuth);
   const setUserAuth = (user) => {
     console.log("setUserAuth called with:", user);
-    if (user && typeof user === 'object') {
-      // Normalize admin property
-      if (user.admin !== undefined && user.isAdmin === undefined) {
-        user.isAdmin = user.admin;
-      }
-    }
     setUserAuthState(user);
     if (user && user.access_token) {
       localStorage.setItem('userAuth', JSON.stringify(user));

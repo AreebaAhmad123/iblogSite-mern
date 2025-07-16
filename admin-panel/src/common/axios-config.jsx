@@ -69,17 +69,8 @@ axiosInstance.interceptors.response.use(
                 originalRequest._retry = true;
                 
                 try {
-                    // Try to get refresh token from cookie (sent automatically withCredentials)
-                    const stored = localStorage.getItem('userAuth');
-                    let refreshToken = null;
-                    if (stored) {
-                        const user = JSON.parse(stored);
-                        if (user && user.refresh_token) {
-                            refreshToken = user.refresh_token;
-                        }
-                    }
-                    // If not in localStorage, try to get from cookie (handled by backend)
-                    const newAccessToken = await refreshAccessToken(refreshToken);
+                    // Try to refresh token using cookies (handled by backend)
+                    const newAccessToken = await refreshAccessToken();
                     if (newAccessToken) {
                         // Update localStorage and retry original request
                         if (stored) {

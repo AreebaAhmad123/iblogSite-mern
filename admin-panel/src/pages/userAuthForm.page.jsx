@@ -70,9 +70,9 @@ const UserAuthForm = () => {
         }
         console.log("[LOGIN] Login success, user data:", data.user);
         setUserAuth(data.user);
-        // Only store non-sensitive info in localStorage
-        const { _id, username, email, admin, super_admin, avatar } = data.user;
-        localStorage.setItem('userAuth', JSON.stringify({ _id, username, email, admin, super_admin, avatar }));
+        // Store user data including access_token for authentication
+        const { _id, username, email, admin, super_admin, avatar, access_token } = data.user;
+        localStorage.setItem('userAuth', JSON.stringify({ _id, username, email, admin, super_admin, avatar, access_token }));
         console.log("[LOGIN] userAuth set in localStorage:", localStorage.getItem('userAuth'));
         
         // Redirect to admin panel
