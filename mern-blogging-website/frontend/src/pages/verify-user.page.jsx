@@ -38,17 +38,8 @@ const VerifyUserPage = () => {
       })
       .catch((error) => {
         // New logic: check if user is already logged in
-        let userAuth = null;
-        try {
-          userAuth = JSON.parse(localStorage.getItem('userAuth'));
-        } catch {}
-        if (userAuth && userAuth.username) {
-          setStatus("Your email is already verified and you are logged in.");
-          setError("");
-        } else {
-          setStatus("");
-          setError(error?.response?.data?.error || "Verification failed.");
-        }
+        setStatus("");
+        setError(error?.response?.data?.error || "Verification failed.");
       });
   }, [searchParams, navigate, setUserAuth]);
 

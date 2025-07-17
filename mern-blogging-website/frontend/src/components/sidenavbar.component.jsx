@@ -51,7 +51,7 @@ const SideNav = () => {
   }, [pageState]);
 
   return (
-    access_token === null ? <Navigate to="/signin" /> :
+    access_token === null ? <Navigate to="/login" /> :
       <section className="relative flex gap-10 py-0 m-0 max-md:flex-col">
         <div className="z-30">
           {/* Mobile Header - Simple responsive header */}

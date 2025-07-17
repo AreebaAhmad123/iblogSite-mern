@@ -35,25 +35,8 @@ export const FooterContext = createContext({});
 const darkThemePreference = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 const App = () => {
-  const getInitialUserAuth = () => {
-    try {
-      const stored = localStorage.getItem('userAuth');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Normalize admin property
-        if (parsed && typeof parsed === 'object') {
-          if (parsed.admin !== undefined && parsed.isAdmin === undefined) {
-            parsed.isAdmin = parsed.admin;
-          }
-        }
-        return parsed;
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  };
-  const [userAuth, setUserAuthState] = useState(getInitialUserAuth);
+  // Remove getInitialUserAuth and all localStorage usage for userAuth
+  const [userAuth, setUserAuthState] = useState(null);
   const setUserAuth = (user) => {
     console.log("setUserAuth called with:", user);
     if (user && typeof user === 'object') {
@@ -63,11 +46,7 @@ const App = () => {
       }
     }
     setUserAuthState(user);
-    if (user && user.access_token) {
-      localStorage.setItem('userAuth', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('userAuth');
-    }
+    // Removed localStorage.setItem/removeItem for userAuth; rely on cookies only
   };
   const [theme, setTheme] = useState(() => darkThemePreference ? "dark" : "light");
   const [blogImages, setBlogImages] = useState([]);
@@ -123,22 +102,8 @@ const App = () => {
     fetchBlogImages();
   }, []);
 
-  useEffect(() => {
-    // Always sync userAuth from localStorage on mount
-    const stored = localStorage.getItem('userAuth');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && parsed.access_token) {
-        setUserAuthState(parsed);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (userAuth && userAuth.access_token) {
-      localStorage.setItem('userAuth', JSON.stringify(userAuth));
-    }
-  }, [userAuth]);
+  // Remove useEffect that syncs userAuth from localStorage on mount
+  // Remove useEffect that sets userAuth in localStorage on change
 
   useEffect(() => {
     if (!userAuth?.access_token) return;
@@ -188,7 +153,6 @@ const App = () => {
                 <Route path="change-password" element={<ChangePassword />} />
               </Route>
               <Route path="login" element={<UserAuthForm type="login" />} />
-              <Route path="signin" element={<UserAuthForm type="login" />} />
               <Route path="signup" element={<UserAuthForm type="signup" />} />
               <Route path="search/:query" element={<SearchPage />} />
               <Route path="user/:username" element={<ProfilePage />} />

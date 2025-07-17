@@ -51,8 +51,6 @@ export const logoutUser = async (setUserAuth) => {
     try {
         // Clear secure cookies
         sessionStorage.clear();
-        localStorage.clear();
-        
         // Clear CSRF token
         csrfManager.clearCSRFToken();
         
@@ -67,7 +65,6 @@ export const logoutUser = async (setUserAuth) => {
         console.error('Error during logout:', error);
         // Fallback: clear sessionStorage
         sessionStorage.clear();
-        localStorage.clear();
         setUserAuth({ access_token: null });
     }
 };

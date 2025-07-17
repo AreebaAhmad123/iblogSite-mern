@@ -17,15 +17,7 @@ const axiosInstance = axios.create({
 // Request interceptor to add auth token, CSRF token, and security headers
 axiosInstance.interceptors.request.use(
     async (config) => {
-        // Attach access_token from localStorage if present
-        const stored = localStorage.getItem('userAuth');
-        if (stored) {
-            const user = JSON.parse(stored);
-            if (user && user.access_token) {
-                config.headers['Authorization'] = `Bearer ${user.access_token}`;
-            }
-        }
-        // Security headers are handled by the server, not client-side
+        // Do not attach access_token from localStorage; rely on cookies
         return config;
     },
     (error) => {
@@ -70,23 +62,9 @@ axiosInstance.interceptors.response.use(
                 
                 try {
                     // Try to get refresh token from cookie (sent automatically withCredentials)
-                    const stored = localStorage.getItem('userAuth');
-                    let refreshToken = null;
-                    if (stored) {
-                        const user = JSON.parse(stored);
-                        if (user && user.refresh_token) {
-                            refreshToken = user.refresh_token;
-                        }
-                    }
-                    // If not in localStorage, try to get from cookie (handled by backend)
-                    const newAccessToken = await refreshAccessToken(refreshToken);
+                    const newAccessToken = await refreshAccessToken();
                     if (newAccessToken) {
                         // Update localStorage and retry original request
-                        if (stored) {
-                            const user = JSON.parse(stored);
-                            user.access_token = newAccessToken;
-                            localStorage.setItem('userAuth', JSON.stringify(user));
-                        }
                         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
                         return axiosInstance(originalRequest);
                     } else {

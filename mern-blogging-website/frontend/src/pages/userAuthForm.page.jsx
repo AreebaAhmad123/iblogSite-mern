@@ -85,9 +85,7 @@ const UserAuthForm = ({ type }) => {
           toast.success("Google authentication successful!");
         }
         setUserAuth(data.user);
-        // Only store non-sensitive info in localStorage
-        const { _id, username, email, admin, super_admin, avatar, access_token } = data.user;
-        localStorage.setItem('userAuth', JSON.stringify({ _id, username, email, admin, super_admin, avatar, access_token }));
+        // Removed localStorage.setItem for userAuth; rely on cookies only
       }
     } catch (error) {
       let errorMsg = "Login failed. Please try again.";
