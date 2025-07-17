@@ -4,8 +4,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "buildCommand": "cd mern-blogging-website/frontend && npm install && npm run build",
-  "outputDirectory": "mern-blogging-website/frontend/dist",
-  "installCommand": "cd mern-blogging-website/frontend && npm install"
-} 
+  ]
+}
