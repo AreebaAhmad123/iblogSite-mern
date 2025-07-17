@@ -63,7 +63,7 @@ function buildCommentTree(flatComments) {
 
   // Build the tree
   flatComments.forEach(comment => {
-    const parentId = comment.parent || comment.replying_to;
+    const parentId = comment.parent;
     if (parentId) {
       if (idToCommentMap[parentId]) {
         idToCommentMap[parentId].children.push(idToCommentMap[comment._id]);

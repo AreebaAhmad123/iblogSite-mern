@@ -114,8 +114,11 @@ const AdminComments = () => {
       })
       .catch((error) => {
         console.error('AdminComments: Error fetching blog:', error);
-        console.error('AdminComments: Error response:', error.response?.data);
-        console.error('AdminComments: Error status:', error.response?.status);
+        if (error.response?.status === 404) {
+            alert('This blog or its comments no longer exist. Please select another blog.');
+            setSelectedBlog(null);
+            setBlog(blogStructure);
+        }
         setLoadingBlog(false);
       });
   }, [selectedBlog, userAuth.access_token]);

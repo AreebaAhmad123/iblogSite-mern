@@ -52,15 +52,6 @@ const CommentCard = ({ commentData, index, leftVal }) => {
                     // Refresh the blog data to update comment count
                     if (typeof fetchBlog === 'function') {
                         await fetchBlog();
-                    } else {
-                        // fallback: update the blog state to remove the deleted comment
-                        const updatedBlog = { ...blog };
-                        if (updatedBlog.comments && updatedBlog.comments.results) {
-                            updatedBlog.comments.results = updatedBlog.comments.results.filter(
-                                (comment) => comment._id !== _id
-                            );
-                        }
-                        setBlog(updatedBlog);
                     }
                 }
             } catch (error) {
@@ -86,7 +77,7 @@ const CommentCard = ({ commentData, index, leftVal }) => {
                     blog_id: blog.blog_id || blog._id,
                     comment: replyComment.trim(),
                     blog_author: blog.author?._id,
-                    replying_to: _id
+                    parent: _id
                 },
                 {
                     headers: {
@@ -124,6 +115,9 @@ const CommentCard = ({ commentData, index, leftVal }) => {
                 }
                 setBlog(updatedBlog);
                 toast.success('Reply posted successfully!');
+                if (typeof fetchBlog === 'function') {
+                    await fetchBlog();
+                }
             }
         } catch (error) {
             console.error('Error posting reply:', error);

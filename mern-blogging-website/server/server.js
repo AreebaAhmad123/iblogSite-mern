@@ -1864,7 +1864,12 @@ server.post("/api/unbookmark-blog", verifyJWT, async (req, res) => {
 server.post("/api/add-comment", verifyJWT, async (req, res) => {
     try {
         let user_id = req.user;
-        let { blog_id, comment, blog_author, replying_to } = req.body;
+        let { blog_id, comment, blog_author, parent, replying_to } = req.body;
+
+        // Support backward compatibility: if 'parent' is not provided, use 'replying_to'
+        if (!parent && replying_to) {
+            parent = replying_to;
+        }
 
         // Handle both blog_id and _id parameters for backward compatibility
         if (!blog_id && req.body._id) {
@@ -1890,7 +1895,8 @@ server.post("/api/add-comment", verifyJWT, async (req, res) => {
             blog_author,
             commented_by: user_id,
             comment,
-            replying_to
+            parent: parent || undefined,
+            isReply: !!parent
         });
 
         await newComment.save();
@@ -1902,16 +1908,16 @@ server.post("/api/add-comment", verifyJWT, async (req, res) => {
         );
 
         // Create notification for comment or reply
-        if (replying_to) {
+        if (parent) {
             // This is a reply to a comment
-            const parentComment = await Comment.findById(replying_to);
+            const parentComment = await Comment.findById(parent);
             if (parentComment && user_id.toString() !== parentComment.commented_by.toString()) {
                 await new Notification({
                     type: 'reply',
                     user: user_id,
                     blog: blog._id,
                     comment: newComment._id,
-                    replied_on_comment: replying_to,
+                    replied_on_comment: parent,
                     notification_for: parentComment.commented_by
                 }).save();
             }
@@ -1979,27 +1985,28 @@ server.post("/api/delete-comment", verifyJWT, async (req, res) => {
             return res.status(403).json({ error: "You don't have permission to delete this comment" });
         }
 
-        // Check if this is a reply to another comment
-        const isReply = comment.replying_to;
-        
-        // Delete the comment
-        await Comment.findByIdAndDelete(comment_id);
-
-        if (isReply) {
-            // If it's a reply, update notifications to remove the reply reference
-            await Notification.updateMany(
-                { reply: comment_id },
-                { $unset: { reply: 1 } }
-            );
-        } else {
-            // If it's a main comment, delete all associated notifications
+        // Recursive function to delete a comment and all its children and notifications
+        async function deleteCommentAndChildren(commentId) {
+            // Find all direct children (replies)
+            const children = await Comment.find({ parent: commentId });
+            // Recursively delete children
+            for (const child of children) {
+                await deleteCommentAndChildren(child._id);
+            }
+            // Delete notifications related to this comment
             await Notification.deleteMany({
                 $or: [
-                    { comment: comment_id },
-                    { replied_on_comment: comment_id }
+                    { comment: commentId },
+                    { reply: commentId },
+                    { replied_on_comment: commentId }
                 ]
             });
+            // Delete the comment itself
+            await Comment.findByIdAndDelete(commentId);
         }
+
+        // Start recursive deletion
+        await deleteCommentAndChildren(comment_id);
 
         // Decrement comment count if blog_id is provided
         if (blog_id) {
@@ -2009,7 +2016,7 @@ server.post("/api/delete-comment", verifyJWT, async (req, res) => {
             );
         }
 
-        return res.status(200).json({ success: true, message: "Comment deleted successfully" });
+        return res.status(200).json({ success: true, message: "Comment and its replies deleted successfully" });
     } catch (err) {
         console.error("Error deleting comment:", err);
         return res.status(500).json({ error: err.message });
@@ -3627,11 +3634,17 @@ server.post("/api/admin/mark-spam", verifyJWT, requireAdmin, async (req, res) =>
         if (!comment_id || typeof isSpam !== "boolean") {
             return res.status(400).json({ error: "comment_id and isSpam (boolean) are required" });
         }
-        const comment = await Comment.findByIdAndUpdate(
-            comment_id,
-            { isSpam },
-            { new: true }
-        );
+        // Recursive function to mark comment and all children as spam/not spam
+        async function markSpamRecursive(id, spamStatus) {
+            await Comment.findByIdAndUpdate(id, { isSpam: spamStatus });
+            const children = await Comment.find({ parent: id });
+            for (const child of children) {
+                await markSpamRecursive(child._id, spamStatus);
+            }
+        }
+        await markSpamRecursive(comment_id, isSpam);
+        // Return the top-level comment
+        const comment = await Comment.findById(comment_id);
         if (!comment) {
             return res.status(404).json({ error: "Comment not found" });
         }
@@ -3653,8 +3666,16 @@ server.delete("/api/admin/delete-spam-comment/:comment_id", verifyJWT, requireAd
         if (!comment || !comment.isSpam) {
             return res.status(404).json({ error: "Spam comment not found" });
         }
-        await Comment.findByIdAndDelete(comment_id);
-        return res.status(200).json({ success: true, message: "Spam comment deleted" });
+        // Recursive function to delete comment and all children
+        async function deleteSpamCommentAndChildren(id) {
+            const children = await Comment.find({ parent: id });
+            for (const child of children) {
+                await deleteSpamCommentAndChildren(child._id);
+            }
+            await Comment.findByIdAndDelete(id);
+        }
+        await deleteSpamCommentAndChildren(comment_id);
+        return res.status(200).json({ success: true, message: "Spam comment and its replies deleted" });
     } catch (err) {
         console.error("Error deleting spam comment:", err);
         return res.status(500).json({ error: err.message });

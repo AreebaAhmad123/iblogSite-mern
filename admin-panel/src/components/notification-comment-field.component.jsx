@@ -19,7 +19,7 @@ const NotificationCommentField = ({ _id, blog_author, index = undefined, replyin
       blog_id: _id,
       blog_author: user_id,
       comment,
-      replying_to: replyingTo
+      parent: replyingTo
     }, {
       headers: {
         'Authorization': `Bearer ${access_token}`

@@ -35,6 +35,7 @@ export default function UserManagement() {
   const [myRequests, setMyRequests] = useState([]);
   const [myRequestsLoading, setMyRequestsLoading] = useState(false);
   const [myRequestsError, setMyRequestsError] = useState('');
+  const [bulkActionError, setBulkActionError] = useState('');
   const isSuperAdmin = userAuth?.super_admin;
 
   // Remove logging from tab click handler
@@ -244,19 +245,23 @@ export default function UserManagement() {
   };
 
   const handleBulkAction = async (action) => {
+    setBulkActionError("");
     if (selectedUserIds.length === 0) return;
     // Only super admin can perform bulk actions
     if (!userAuth?.super_admin) {
+      setBulkActionError("Only super admins can perform bulk actions.");
       toast.error("Only super admins can perform bulk actions.");
       return;
     }
     // Prevent bulk actions if any selected user is self or super admin
     const selectedUsers = users.filter(u => selectedUserIds.includes(u._id));
     if (selectedUsers.some(u => u._id === userAuth._id)) {
+      setBulkActionError("You cannot perform bulk actions on yourself.");
       toast.error("You cannot perform bulk actions on yourself.");
       return;
     }
     if (selectedUsers.some(u => u.super_admin)) {
+      setBulkActionError("You cannot perform bulk actions on super admins.");
       toast.error("You cannot perform bulk actions on super admins.");
       return;
     }
@@ -283,6 +288,7 @@ export default function UserManagement() {
       await fetchUsers();
     } catch (err) {
       const msg = err.response?.data?.error || 'Bulk action failed.';
+      setBulkActionError(msg);
       setError(msg);
       if (err.response?.status === 403 || /permission|not allowed|forbidden/i.test(msg)) {
         toast.error('You do not have permission to perform this action.');
@@ -365,6 +371,7 @@ export default function UserManagement() {
                     <button className="px-3 py-1 rounded bg-yellow-500 text-white" disabled={actionLoading} onClick={() => handleBulkAction('deactivate')}>Deactivate</button>
                     <button className="px-3 py-1 rounded bg-red text-white" disabled={actionLoading} onClick={() => handleBulkAction('delete')}>Delete</button>
                   </div>
+                  {bulkActionError && <div className="mt-2 text-red-600">{bulkActionError}</div>}
                 </div>
               )}
               <div className="w-full overflow-x-auto">
@@ -384,9 +391,9 @@ export default function UserManagement() {
                     selectedUserIds={selectedUserIds}
                     onSelectUser={handleSelectUser}
                     onSelectAll={handleSelectAll}
-                    onPromoteDemote={handlePromoteDemote}
-                    onActivateDeactivate={handleActivateDeactivate}
-                    onDeleteUser={handleDeleteUser}
+                    handlePromoteDemote={handlePromoteDemote}
+                    handleActivateDeactivate={handleActivateDeactivate}
+                    handleDeleteUser={handleDeleteUser}
                     actionLoading={actionLoading}
                     filter={filter}
                     onFilter={handleFilter}
