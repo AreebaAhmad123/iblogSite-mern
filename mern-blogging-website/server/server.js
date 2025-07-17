@@ -68,8 +68,10 @@ server.use(cors({
       'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
       'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app', // Vercel preview domain
       'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app', // New Vercel domain
+      'https://iblog-site-mern-b5u8.vercel.app', // Your deployed frontend
       'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app', // Admin panel domain
       'https://iblog-site-mern-admin.vercel.app' // Admin panel production domain
+      
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
