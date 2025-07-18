@@ -4,14 +4,14 @@ import { handleAuthError, getErrorMessage } from './error-handler';
 import csrfManager from './csrf';
 import { refreshAccessToken } from './auth';
 
-// Create axios instance with enhanced security config
+// Ensure axios always sends credentials (cookies) for CORS
 const axiosInstance = axios.create({
-    timeout: 15000, // Increased timeout
+    timeout: 15000,
     headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
     },
-    withCredentials: true // Enable credentials for CORS
+    withCredentials: true // Always send credentials for cross-origin requests
 });
 
 // Request interceptor to add auth token, CSRF token, and security headers

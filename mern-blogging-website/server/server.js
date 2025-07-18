@@ -57,26 +57,23 @@ let PORT = process.env.PORT || 3000;
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/; // Enhanced password regex
 
-// CORS must be the first middleware to ensure all responses (including errors) have CORS headers
+// List all allowed frontend origins (production, preview, local dev)
 const allowedOrigins = [
-  'http://localhost:5173', // Always allow Vite dev server for local dev
-  'http://localhost:5174', // Always allow Vite dev server for local dev
-  'http://localhost:3000',
-  'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app',
-  'https://iblog-site-mern-admin.vercel.app',
-  'https://iblog-site-mern-b5u8.vercel.app'
-  // Add more production domains as needed
+  'https://iblog-site-mern-b5u8.vercel.app', // production
+  'https://iblog-site-mern-lovat.vercel.app', // preview
+  'http://localhost:5173', // local dev (Vite)
+  'http://localhost:3000'  // local dev (React)
 ];
 
 function isAllowedOrigin(origin) {
-  if (!origin) return true;
+  if (!origin) return true; // Allow non-browser requests (Postman, curl)
   if (allowedOrigins.includes(origin)) return true;
   // Allow Vercel preview domains dynamically
   if (/^https:\/\/iblog-site-mern(-admin)?-git-[^\.]+-areebaahmad123s-projects\.vercel\.app$/.test(origin)) return true;
-  // Add more dynamic checks if you use other preview domain patterns
   return false;
 }
 
+// CORS middleware (must be before any routes)
 server.use(cors({
   origin: function (origin, callback) {
     if (isAllowedOrigin(origin)) {
@@ -85,7 +82,7 @@ server.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allow cookies and credentials
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-Content-Type-Options', 'X-Frame-Options'],
   exposedHeaders: ['X-Total-Count'],
