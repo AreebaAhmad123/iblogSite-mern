@@ -24,6 +24,7 @@ import slowDown from 'express-slow-down';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import { body, validationResult } from 'express-validator';
+import crypto from 'crypto';
 
 //schema
 import User from './Schema/User.js'
@@ -56,25 +57,28 @@ let PORT = process.env.PORT || 3000;
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/; // Enhanced password regex
 
-// ===== CORS MUST BE FIRST! =====
 // CORS must be the first middleware to ensure all responses (including errors) have CORS headers
+const allowedOrigins = [
+  'http://localhost:5173', // Always allow Vite dev server for local dev
+  'http://localhost:5174', // Always allow Vite dev server for local dev
+  'http://localhost:3000',
+  'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app',
+  'https://iblog-site-mern-admin.vercel.app',
+  // Add more production domains as needed
+];
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  // Allow Vercel preview domains dynamically
+  if (/^https:\/\/iblog-site-mern(-admin)?-git-[^\.]+-areebaahmad123s-projects\.vercel\.app$/.test(origin)) return true;
+  // Add more dynamic checks if you use other preview domain patterns
+  return false;
+}
+
 server.use(cors({
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173', // Vite dev server (main app)
-      'http://localhost:5174', // Vite dev server (admin panel)
-      'http://localhost:3000', // Local backend
-      'https://prismatic-starship-137fe3.netlify.app', // Old production frontend
-      'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
-      'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app', // Vercel preview domain
-      'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app', // New Vercel domain
-      'https://iblog-site-mern-b5u8.vercel.app', // Your deployed frontend
-      'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app', // Admin panel domain
-      'https://iblog-site-mern-admin.vercel.app' // Admin panel production domain
-      
-    ];
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -89,19 +93,7 @@ server.use(cors({
 // Handle preflight requests for all routes
 server.options('*', cors({
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173', // Vite dev server (main app)
-      'http://localhost:5174', // Vite dev server (admin panel)
-      'http://localhost:3000', // Local backend
-      'https://prismatic-starship-137fe3.netlify.app', // Old production frontend
-      'https://iblog-site-mern-lovat.vercel.app', // Vercel production domain
-      'https://iblog-site-mern-git-main-areebaahmad123s-projects.vercel.app', // Vercel preview domain
-      'https://iblog-site-mern-716fi77ns-areebaahmad123s-projects.vercel.app', // New Vercel domain
-      'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app', // Admin panel domain
-      'https://iblog-site-mern-admin.vercel.app' // Admin panel production domain
-    ];
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -141,9 +133,9 @@ const csrfErrorHandler = (err, req, res, next) => {
 const csrfProtection = csurf({ cookie: { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production' } });
 
 // Generate CSRF token
-const generateCSRFToken = () => {
-    return require('crypto').randomBytes(32).toString('hex');
-};
+function generateCSRFToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 // Security headers
 server.use(helmet({
@@ -587,9 +579,15 @@ server.post("/api/signup", csrfProtection, csrfErrorHandler, validateSignupInput
             process.env.SECRET_ACCESS_KEY,
             { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
         );
-        // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
-        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        // Set httpOnly cookies
+        res.cookie('access_token', access_token, getCookieOptions({ crossSite: true, maxAge: 60 * 60 * 1000 }));
+        res.cookie('refresh_token', refresh_token, getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+        res.cookie('user_data', JSON.stringify(user), getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+
+        // Set CSRF token
+        const csrfToken = generateCSRFToken();
+        res.cookie('csrf-token', csrfToken, getCSRFCookieOptions());
+
         return res.status(201).json({
             message: "Signup successful. Please verify your email.",
             user: {
@@ -646,9 +644,15 @@ server.post("/api/login", csrfProtection, csrfErrorHandler, validateLoginInput, 
             process.env.SECRET_ACCESS_KEY,
             { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
         );
-        // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
-        res.cookie('refresh_token', refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        // Set httpOnly cookies
+        res.cookie('access_token', access_token, getCookieOptions({ crossSite: true, maxAge: 60 * 60 * 1000 }));
+        res.cookie('refresh_token', refresh_token, getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+        res.cookie('user_data', JSON.stringify(user), getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+
+        // Set CSRF token
+        const csrfToken = generateCSRFToken();
+        res.cookie('csrf-token', csrfToken, getCSRFCookieOptions());
+
         console.log("[LOGIN] User admin status from DB:", {
             admin: user.admin,
             super_admin: user.super_admin,
@@ -741,7 +745,7 @@ server.post("/api/refresh-token", async (req, res) => {
         );
         
         // Set new access token cookie
-        res.cookie('access_token', newAccessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        res.cookie('access_token', newAccessToken, getCookieOptions({ crossSite: true, maxAge: 60 * 60 * 1000 }));
         
         return res.status(200).json({ 
             message: "Token refreshed successfully",
@@ -2242,24 +2246,43 @@ server.post("/api/all-notifications-count", verifyJWT, async (req, res) => {
 
 server.post('/api/google-auth', async (req, res) => {
     console.log("Attempting Google Auth...");
-    // Google client ID configuration loaded
     try {
         const { id_token } = req.body;
+        if (!id_token) {
+            console.error("[GOOGLE AUTH] No id_token provided in request body", req.body);
+            return res.status(400).json({ error: "No id_token provided." });
+        }
         console.log("Received ID token:", id_token);
         const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
         // Decode token without verifying to inspect payload
-        const base64Payload = id_token.split('.')[1];
-        const decodedPayload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf-8'));
-        console.log("Decoded token audience (aud):", decodedPayload.aud);
-        console.log("Decoded token full payload:", decodedPayload);
+        let decodedPayload;
+        try {
+            const base64Payload = id_token.split('.')[1];
+            decodedPayload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf-8'));
+            console.log("Decoded token audience (aud):", decodedPayload.aud);
+            console.log("Decoded token full payload:", decodedPayload);
+        } catch (decodeErr) {
+            console.error("[GOOGLE AUTH] Failed to decode id_token payload", decodeErr);
+            return res.status(400).json({ error: "Invalid id_token format." });
+        }
 
-        const ticket = await client.verifyIdToken({
-            idToken: id_token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+        let ticket;
+        try {
+            ticket = await client.verifyIdToken({
+                idToken: id_token,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+        } catch (verifyErr) {
+            console.error("[GOOGLE AUTH] Failed to verify id_token with Google", verifyErr);
+            return res.status(401).json({ error: "Failed to verify Google ID token." });
+        }
 
         const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            console.error("[GOOGLE AUTH] No email in Google payload", payload);
+            return res.status(400).json({ error: "Google account did not return an email address." });
+        }
         const email = payload.email;
         const picture = payload.picture;
         // Fallbacks for missing fields
@@ -2267,7 +2290,13 @@ server.post('/api/google-auth', async (req, res) => {
         const given_name = payload.given_name || name.split(' ')[0] || name;
         const family_name = payload.family_name || name.split(' ')[1] || 'GoogleUser';
 
-        let user = await User.findOne({ "personal_info.email": email });
+        let user;
+        try {
+            user = await User.findOne({ "personal_info.email": email });
+        } catch (dbErr) {
+            console.error("[GOOGLE AUTH] Database error during user lookup", dbErr);
+            return res.status(500).json({ error: "Database error during user lookup." });
+        }
 
         if (user && !user.active) {
             return res.status(403).json({ error: "Your account is deactivated. Please contact support or an admin." });
@@ -2296,42 +2325,54 @@ server.post('/api/google-auth', async (req, res) => {
                 google_auth: true,
                 verified: true // Mark new Google-auth users as verified
             });
-            await user.save();
+            try {
+                await user.save();
+            } catch (saveErr) {
+                console.error("[GOOGLE AUTH] Error saving new Google user", saveErr);
+                return res.status(500).json({ error: "Failed to save new Google user." });
+            }
             // Notify all admins about new user registration
-            const admins = await User.find({ $or: [ { admin: true }, { super_admin: true } ] });
-            for (const admin of admins) {
-                await Notification.create({
-                    type: 'new_user',
-                    notification_for: admin._id,
-                    for_role: 'admin',
-                    user: user._id
-                });
+            try {
+                const admins = await User.find({ $or: [ { admin: true }, { super_admin: true } ] });
+                for (const admin of admins) {
+                    await Notification.create({
+                        type: 'new_user',
+                        notification_for: admin._id,
+                        for_role: 'admin',
+                        user: user._id
+                    });
+                }
+            } catch (notifyErr) {
+                console.error("[GOOGLE AUTH] Error notifying admins of new user", notifyErr);
+                // Don't block user creation on notification failure
             }
         }
         // Generate tokens
-        const access_token = jwt.sign(
-            { id: user._id, admin: user.admin || user.super_admin, super_admin: user.super_admin, iat: Math.floor(Date.now() / 1000), type: 'access' },
-            process.env.SECRET_ACCESS_KEY,
-            { expiresIn: JWT_EXPIRES_IN, audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
-        );
-        const refresh_token = jwt.sign(
-            { id: user._id, type: 'refresh' },
-            process.env.SECRET_ACCESS_KEY,
-            { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
-        );
-        // Set cookies for cross-origin requests
-        res.cookie('access_token', access_token, { 
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'none', 
-            maxAge: 1000 * 60 * 60 * 24 
-        });
-        res.cookie('refresh_token', refresh_token, { 
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'none', 
-            maxAge: 1000 * 60 * 60 * 24 * 7 
-        });
+        let access_token, refresh_token;
+        try {
+            access_token = jwt.sign(
+                { id: user._id, admin: user.admin || user.super_admin, super_admin: user.super_admin, iat: Math.floor(Date.now() / 1000), type: 'access' },
+                process.env.SECRET_ACCESS_KEY,
+                { expiresIn: JWT_EXPIRES_IN, audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
+            );
+            refresh_token = jwt.sign(
+                { id: user._id, type: 'refresh' },
+                process.env.SECRET_ACCESS_KEY,
+                { expiresIn: '7d', audience: JWT_AUDIENCE, issuer: JWT_ISSUER }
+            );
+        } catch (jwtErr) {
+            console.error("[GOOGLE AUTH] Error generating JWT tokens", jwtErr);
+            return res.status(500).json({ error: "Failed to generate authentication tokens." });
+        }
+        // Set httpOnly cookies
+        res.cookie('access_token', access_token, getCookieOptions({ crossSite: true, maxAge: 60 * 60 * 1000 }));
+        res.cookie('refresh_token', refresh_token, getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+        res.cookie('user_data', JSON.stringify(user), getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+
+        // Set CSRF token
+        const csrfToken = generateCSRFToken();
+        res.cookie('csrf-token', csrfToken, getCSRFCookieOptions());
+
         console.log("[GOOGLE AUTH] User admin status from DB:", {
             admin: user.admin,
             super_admin: user.super_admin,
@@ -2353,8 +2394,8 @@ server.post('/api/google-auth', async (req, res) => {
             }
         });
     } catch (err) {
-        console.error('Google auth error:', err);
-        return res.status(500).json({ error: "Failed to authenticate with Google. Try again with another account." });
+        console.error('[GOOGLE AUTH] Unhandled error:', err, '\nRequest body:', req.body, '\nStack:', err.stack);
+        return res.status(500).json({ error: "Failed to authenticate with Google. Try again with another account.", details: err.message });
     }
 });
 
@@ -2610,8 +2651,14 @@ server.get('/api/verify-user', async (req, res) => {
                     issuer: JWT_ISSUER
                 }
             );
-            // Set cookies for local development (secure: false, sameSite: 'lax')
-            res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+            // Set httpOnly cookies
+            res.cookie('access_token', access_token, getCookieOptions({ crossSite: true, maxAge: 60 * 60 * 1000 }));
+            res.cookie('user_data', JSON.stringify(user), getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+
+            // Set CSRF token
+            const csrfToken = generateCSRFToken();
+            res.cookie('csrf-token', csrfToken, getCSRFCookieOptions());
+
             return res.status(200).json({
                 message: "User already verified. You are now logged in.",
                 user: {
@@ -2648,8 +2695,14 @@ server.get('/api/verify-user', async (req, res) => {
                 issuer: JWT_ISSUER
             }
         );
-        // Set cookies for local development (secure: false, sameSite: 'lax')
-        res.cookie('access_token', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 });
+        // Set httpOnly cookies
+        res.cookie('access_token', access_token, getCookieOptions({ crossSite: true, maxAge: 60 * 60 * 1000 }));
+        res.cookie('user_data', JSON.stringify(user), getCookieOptions({ crossSite: true, maxAge: 7 * 24 * 60 * 60 * 1000 }));
+
+        // Set CSRF token
+        const csrfToken = generateCSRFToken();
+        res.cookie('csrf-token', csrfToken, getCSRFCookieOptions());
+
         return res.status(200).json({ 
             message: "Email verified! You are now logged in.",
             user: {
@@ -2910,7 +2963,10 @@ server.post("/api/admin/set-admin", verifyJWT, async (req, res) => {
 // Admin: List all blogs
 server.post("/api/admin/all-blogs", verifyJWT, requireAdmin, async (req, res) => {
   try {
-    const blogs = await Blog.find({}, {
+    const { page = 1, limit = 10, draft } = req.body;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const filter = typeof draft === 'boolean' ? { draft } : {};
+    const projection = {
       _id: 1,
       blog_id: 1,
       title: 1,
@@ -2921,8 +2977,15 @@ server.post("/api/admin/all-blogs", verifyJWT, requireAdmin, async (req, res) =>
       author: 1,
       publishedAt: 1,
       activity: 1
-    }).populate('author', 'personal_info.fullname personal_info.username');
-    res.json({ blogs });
+    };
+    const [blogs, total] = await Promise.all([
+      Blog.find(filter, projection)
+        .populate('author', 'personal_info.fullname personal_info.username')
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Blog.countDocuments(filter)
+    ]);
+    res.json({ blogs, total });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch blogs" });
   }
@@ -3239,12 +3302,7 @@ server.get('/api/admin/my-status-change-requests', verifyJWT, async (req, res) =
 server.get('/api/csrf-token', csrfProtection, (req, res) => {
     console.log('CSRF token endpoint hit');
 
-  res.cookie('csrf-token', req.csrfToken(), {
-    httpOnly: false,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  });
+  res.cookie('csrf-token', req.csrfToken(), getCSRFCookieOptions());
   res.json({ csrfToken: req.csrfToken() });
 });
 // Delete an admin status change request by ID
@@ -4155,3 +4213,25 @@ server.post("/api/admin/newsletter-subscribers/bulk-delete", verifyJWT, requireA
     res.json(result);
 });
 // ... existing code ...
+
+// Helper for cookie options
+function getCookieOptions({ crossSite = false, maxAge } = {}) {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT_NAME;
+  return {
+    httpOnly: true,
+    secure: isProd, // false in local dev, true in production
+    sameSite: isProd ? (crossSite ? 'none' : 'lax') : 'lax', // 'lax' for local dev, 'none' for crossSite in prod
+    maxAge
+  };
+}
+
+// Helper for CSRF cookie (not httpOnly)
+function getCSRFCookieOptions() {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT_NAME;
+  return {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: isProd ? 'lax' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  };
+}

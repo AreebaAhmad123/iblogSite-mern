@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "./axios-config";
 export const filterPaginationData = async ({
     create_new_arr = false,
     state,

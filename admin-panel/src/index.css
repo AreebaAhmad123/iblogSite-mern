@@ -782,3 +782,14 @@ body::-webkit-scrollbar-thumb:hover {
     color: #fff !important;
     transition: background 0.2s cubic-bezier(0.4,0,0.2,1);
 } 
+
+body .Toastify__toast-theme--dark,
+.Toastify__toast-theme--dark {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+body .Toastify__toast,
+.Toastify__toast {
+  font-size: 1.1rem !important; /* Optional: makes it easier to see if override works */
+}

@@ -6,7 +6,7 @@ import { refreshAccessToken } from './auth';
 
 // Create axios instance with enhanced security config
 const axiosInstance = axios.create({
-    timeout: 15000, // Increased timeout
+    timeout: 60000, // Increased timeout
     headers: {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'

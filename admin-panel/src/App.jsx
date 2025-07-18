@@ -23,30 +23,10 @@ export const ThemeContext = createContext({});
 const darkThemePreference = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 const App = () => {
-  const getInitialUserAuth = () => {
-    try {
-      const stored = localStorage.getItem('userAuth');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Ensure access_token exists for authentication
-        if (parsed && parsed.access_token) {
-          return parsed;
-        }
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  };
-  const [userAuth, setUserAuthState] = useState(getInitialUserAuth);
+  // Remove getInitialUserAuth and all localStorage usage for userAuth
+  const [userAuth, setUserAuthState] = useState(null);
   const setUserAuth = (user) => {
-    console.log("setUserAuth called with:", user);
     setUserAuthState(user);
-    if (user && user.access_token) {
-      localStorage.setItem('userAuth', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('userAuth');
-    }
   };
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('adminTheme');
@@ -86,18 +66,18 @@ const App = () => {
 
   useEffect(() => {
     // Always sync userAuth from localStorage on mount
-    const stored = localStorage.getItem('userAuth');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && parsed.access_token) {
-        setUserAuthState(parsed);
-      }
-    }
+    // const stored = localStorage.getItem('userAuth');
+    // if (stored) {
+    //   const parsed = JSON.parse(stored);
+    //   if (parsed && parsed.access_token) {
+    //     setUserAuthState(parsed);
+    //   }
+    // }
   }, []);
 
   useEffect(() => {
     if (userAuth && userAuth.access_token) {
-      localStorage.setItem('userAuth', JSON.stringify(userAuth));
+      // localStorage.setItem('userAuth', JSON.stringify(userAuth));
     }
   }, [userAuth]);
 
@@ -127,7 +107,7 @@ const App = () => {
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       <UserContext.Provider value={{ userAuth, setUserAuth }}>
-        <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+        <ToastContainer theme={theme} position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<UserAuthForm />} />

@@ -12,6 +12,10 @@ const NewsletterManagement = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [stats, setStats] = useState({});
   const [loadingSubscribers, setLoadingSubscribers] = useState(false);
+  const [bulkActionError, setBulkActionError] = useState("");
+  const [fetchSubscribersError, setFetchSubscribersError] = useState("");
+  const [subscriberStatusError, setSubscriberStatusError] = useState("");
+  const [deleteSubscriberError, setDeleteSubscriberError] = useState("");
   
   // Newsletter sending state
   const [subject, setSubject] = useState('');

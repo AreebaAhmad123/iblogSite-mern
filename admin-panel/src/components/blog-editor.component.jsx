@@ -6,7 +6,7 @@ import { useEffect, useState, useContext, useRef, useCallback } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { tools } from "./tools.component.jsx";
 import { EditorContext } from "../pages/editor.page.jsx";
-import axios from "axios";
+import axios from '../common/axios-config';
 import { lookInSession } from "../common/session";
 import { UserContext } from "../App";
 import { uploadImage } from "../common/cloudinary";

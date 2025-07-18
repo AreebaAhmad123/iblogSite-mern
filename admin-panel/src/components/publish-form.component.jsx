@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { EditorContext } from "../pages/editor.page.jsx";
 import { UserContext } from "../App";
-import axios from "axios";
+import axios from '../common/axios-config';
 import { lookInSession } from "../common/session";
 
 const PublishForm = () => {

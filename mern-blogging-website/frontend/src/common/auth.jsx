@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './axios-config';
 import csrfManager from './csrf';
 
 // Token validation function with enhanced security
