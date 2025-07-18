@@ -1540,7 +1540,7 @@ server.put("/api/update-blog/:blogId", verifyJWT, requireAdmin, async (req, res)
             return res.status(404).json({ error: "Blog not found or you don't have permission to edit it" });
         }
 
- .        // Validate required fields for published blogs
+        // Validate required fields for published blogs
         if (!draft) {
             if (!title || !title.trim()) {
                 return res.status(400).json({ error: "Title is required for published blogs" });
