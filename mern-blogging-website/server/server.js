@@ -128,7 +128,9 @@ const csrfErrorHandler = (err, req, res, next) => {
 
 // Apply CSRF protection ONLY to sensitive/auth routes
 
-const csrfProtection = csurf({ cookie: { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production' } });
+const csrfProtection = csurf({
+  cookie: getCSRFCookieOptions()
+});
 
 // Generate CSRF token
 function generateCSRFToken() {
@@ -1537,7 +1539,7 @@ server.put("/api/update-blog/:blogId", verifyJWT, requireAdmin, async (req, res)
             return res.status(404).json({ error: "Blog not found or you don't have permission to edit it" });
         }
 
-        // Validate required fields for published blogs
+ .        // Validate required fields for published blogs
         if (!draft) {
             if (!title || !title.trim()) {
                 return res.status(400).json({ error: "Title is required for published blogs" });
@@ -3299,9 +3301,8 @@ server.get('/api/admin/my-status-change-requests', verifyJWT, async (req, res) =
 
 server.get('/api/csrf-token', csrfProtection, (req, res) => {
     console.log('CSRF token endpoint hit');
-
-  res.cookie('csrf-token', req.csrfToken(), getCSRFCookieOptions());
-  res.json({ csrfToken: req.csrfToken() });
+    res.cookie('csrf-token', req.csrfToken(), getCSRFCookieOptions());
+    res.json({ csrfToken: req.csrfToken() });
 });
 // Delete an admin status change request by ID
 server.delete("/api/admin/delete-status-change-request/:id", verifyJWT, async (req, res) => {
@@ -4227,9 +4228,9 @@ function getCookieOptions({ crossSite = false, maxAge } = {}) {
 function getCSRFCookieOptions() {
   const isProd = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT_NAME;
   return {
-    httpOnly: false,
+    httpOnly: false, // Must be false so frontend JS can read it
     secure: isProd,
-    sameSite: isProd ? 'lax' : 'lax',
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   };
 }
