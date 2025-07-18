@@ -66,12 +66,12 @@ const allowedOrigins = [
 ];
 
 function isAllowedOrigin(origin) {
-  if (!origin) return true; // Allow non-browser requests (Postman, curl)
-  if (allowedOrigins.includes(origin)) return true;
-  // Allow Vercel preview domains dynamically
-  if (/^https:\/\/iblog-site-mern(-admin)?-git-[^\.]+-areebaahmad123s-projects\.vercel\.app$/.test(origin)) return true;
-  return false;
-}
+    if (!origin) return true; // Allow non-browser requests (Postman, curl)
+    if (allowedOrigins.includes(origin)) return true;
+    // Allow all Vercel preview domains for main and admin panel
+    if (/^https:\/\/iblog-site-mern(-admin)?-[a-z0-9]+-areebaahmad123s-projects\.vercel\.app$/.test(origin)) return true;
+    return false;
+  }
 
 // CORS middleware (must be before any routes)
 server.use(cors({
