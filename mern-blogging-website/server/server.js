@@ -76,6 +76,8 @@ function isAllowedOrigin(origin) {
 // CORS middleware (must be before any routes)
 server.use(cors({
   origin: function (origin, callback) {
+    console.log('CORS request from:', origin);
+
     if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
