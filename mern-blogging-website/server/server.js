@@ -64,6 +64,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://iblog-site-mern-admin-git-main-areebaahmad123s-projects.vercel.app',
   'https://iblog-site-mern-admin.vercel.app',
+  'https://iblog-site-mern-b5u8.vercel.app'
   // Add more production domains as needed
 ];
 
