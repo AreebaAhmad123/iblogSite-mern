@@ -63,6 +63,7 @@ const allowedOrigins = [
   'https://iblog-site-mern-b5u8.vercel.app', // production
   'https://iblog-site-mern-lovat.vercel.app', // preview
   'http://localhost:5173', // local dev (Vite)
+  'http://localhost:5174', // local dev (Vite)
   'http://localhost:3000'  // local dev (React)
 ];
 
@@ -4252,26 +4253,38 @@ server.get('/api/ad-banner', async (req, res) => {
 
 // Middleware: check admin (reuse existing or simple check)
 const isAdmin = (req, res, next) => {
-  if (req.user && (req.user.admin || req.user.super_admin)) return next();
+  if (req.admin || req.super_admin) return next();
   return res.status(403).json({ success: false, error: 'Admin access required.' });
 };
 
 // List all ad banners (admin only)
-server.get('/api/admin/ad-banners', authenticateToken, isAdmin, async (req, res) => {
+server.get('/api/admin/ad-banners', verifyJWT, isAdmin, async (req, res) => {
   try {
-    const banners = await AdBanner.find({}).sort({ updatedAt: -1 });
-    res.json({ success: true, banners });
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+    const [banners, total] = await Promise.all([
+      AdBanner.find({}).sort({ updatedAt: -1 }).skip(skip).limit(limit),
+      AdBanner.countDocuments({})
+    ]);
+    res.json({ success: true, banners, total, page, limit });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error.' });
   }
 });
 
 // Set/create ad banner (admin only)
-server.post('/api/admin/ad-banner', authenticateToken, isAdmin, async (req, res) => {
+server.post('/api/admin/ad-banner', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { imageUrl, link, visible } = req.body;
     if (!imageUrl) return res.status(400).json({ success: false, error: 'Image URL required.' });
+    if (!/\.(jpg|jpeg|png|gif|webp)$/i.test(imageUrl)) return res.status(400).json({ success: false, error: 'Invalid image file type. Only jpg, jpeg, png, gif, webp allowed.' });
     if (link && !/^https?:\/\/.+/.test(link)) return res.status(400).json({ success: false, error: 'Invalid link URL.' });
+    // Duplicate image check
+    const existingBanner = await AdBanner.findOne({ imageUrl });
+    if (existingBanner) {
+      return res.status(400).json({ success: false, error: 'A banner with this image already exists.' });
+    }
     // If visible is true, set all others to visible: false
     if (visible !== false) {
       await AdBanner.updateMany({ visible: true }, { visible: false });
@@ -4285,7 +4298,7 @@ server.post('/api/admin/ad-banner', authenticateToken, isAdmin, async (req, res)
 });
 
 // Update ad banner (admin only)
-server.put('/api/admin/ad-banner/:id', authenticateToken, isAdmin, async (req, res) => {
+server.put('/api/admin/ad-banner/:id', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { imageUrl, link, visible } = req.body;
@@ -4312,13 +4325,17 @@ server.put('/api/admin/ad-banner/:id', authenticateToken, isAdmin, async (req, r
 });
 
 // Hide ad banner (admin only)
-server.patch('/api/admin/ad-banner/:id/hide', authenticateToken, isAdmin, async (req, res) => {
+server.patch('/api/admin/ad-banner/:id/hide', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const banner = await AdBanner.findById(id);
     if (!banner) return res.status(404).json({ success: false, error: 'Banner not found.' });
-    // Delete image from Cloudinary
-    await deleteCloudinaryImage(banner.imageUrl);
+    // Delete image from Cloudinary with error handling
+    try {
+      await deleteCloudinaryImage(banner.imageUrl, true);
+    } catch (imgErr) {
+      return res.status(500).json({ success: false, error: 'Failed to delete image from Cloudinary. Banner not hidden.' });
+    }
     banner.visible = false;
     banner.updatedAt = Date.now();
     await banner.save();
@@ -4329,13 +4346,18 @@ server.patch('/api/admin/ad-banner/:id/hide', authenticateToken, isAdmin, async 
 });
 
 // Delete ad banner (admin only)
-server.delete('/api/admin/ad-banner/:id', authenticateToken, isAdmin, async (req, res) => {
+server.delete('/api/admin/ad-banner/:id', verifyJWT, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const banner = await AdBanner.findByIdAndDelete(id);
+    const banner = await AdBanner.findById(id);
     if (!banner) return res.status(404).json({ success: false, error: 'Banner not found.' });
-    // Delete image from Cloudinary
-    await deleteCloudinaryImage(banner.imageUrl);
+    // Delete image from Cloudinary with error handling
+    try {
+      await deleteCloudinaryImage(banner.imageUrl, true);
+    } catch (imgErr) {
+      return res.status(500).json({ success: false, error: 'Failed to delete image from Cloudinary. Banner not deleted.' });
+    }
+    await AdBanner.findByIdAndDelete(id);
     res.json({ success: true, banner });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error.' });
@@ -4343,7 +4365,7 @@ server.delete('/api/admin/ad-banner/:id', authenticateToken, isAdmin, async (req
 });
 
 // Helper to delete Cloudinary image by URL
-async function deleteCloudinaryImage(imageUrl) {
+async function deleteCloudinaryImage(imageUrl, throwOnError = false) {
   if (imageUrl && imageUrl.includes('cloudinary.com')) {
     try {
       // Extract public_id from the URL
@@ -4354,6 +4376,7 @@ async function deleteCloudinaryImage(imageUrl) {
       }
     } catch (imgErr) {
       console.error('Failed to delete ad banner image from Cloudinary:', imgErr);
+      if (throwOnError) throw imgErr;
     }
   }
 }
@@ -4401,4 +4424,13 @@ server.patch('/api/ad-banner/click', adBannerClickLimiter, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error.' });
   }
+});
+
+// Log ad banner image load errors (for analytics)
+server.post('/api/ad-banner/image-error', async (req, res) => {
+  const { imageUrl } = req.body;
+  if (!imageUrl) return res.status(400).json({ success: false, error: 'imageUrl required' });
+  // For now, just log to console. In production, store in DB or analytics system.
+  console.warn(`[AdBanner] Image load error reported: ${imageUrl} at ${new Date().toISOString()}`);
+  res.json({ success: true });
 });

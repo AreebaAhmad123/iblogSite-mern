@@ -17,6 +17,7 @@ import NewsletterManagement from './admin/NewsletterManagement.jsx';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import ProfilePage from './pages/profile.page.jsx';
 import EditorPage from './pages/editor.page.jsx';
+import AdminAdManagement from './admin/AdminAdManagement.jsx';
 
 export const UserContext = createContext({});
 export const ThemeContext = createContext({});
@@ -123,6 +124,7 @@ const App = () => {
             <Route path="utilities" element={<AdminUtilities />} />
             <Route path="editor" element={<EditorPage />} />
             <Route path="editor/:blog_id" element={<EditorPage />} />
+            <Route path="ads" element={<AdminAdManagement />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

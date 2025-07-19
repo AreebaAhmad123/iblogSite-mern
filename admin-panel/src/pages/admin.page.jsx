@@ -13,7 +13,7 @@ import LogoutButton from '../components/logout-button.component.jsx';
 import ThemeToggle from '../components/theme-toggle.component.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserContext } from '../App';
-import { Navigate, useNavigate, Outlet } from 'react-router-dom';
+import { Navigate, useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import AdminDashboard from '../admin/AdminDashboard.jsx';
 import axios from 'axios';
 import ProfilePage from './profile.page.jsx';
@@ -85,11 +85,23 @@ const sections = [
   },
 ];
 
+const routeMap = {
+  dashboard: '/admin/dashboard',
+  profile: '/admin/profile',
+  users: '/admin/users',
+  blogs: '/admin/blogs',
+  ads: '/admin/ads',
+  newsletter: '/admin/newsletter',
+  notifications: '/admin/notifications',
+  comments: '/admin/comments',
+  utilities: '/admin/utilities',
+};
+
 const AdminPanel = () => {
   const { userAuth, setUserAuth } = useContext(UserContext);
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const location = useLocation();
   const [showSideNav, setShowSideNav] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Restore isLoading state
   const activeTabLine = useRef();
   const sideBarIconTab = useRef();
   const pageStateTab = useRef();
@@ -133,34 +145,30 @@ const AdminPanel = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const fromNotification = urlParams.get('section');
     if (fromNotification === 'notifications') {
-      setActiveSection('notifications');
+      // setActiveSection('notifications'); // This line is removed
     }
   }, []);
 
   // Wait for auth state to be initialized
   useEffect(() => {
-    // If userAuth is null, we're still loading
     if (userAuth === null) {
       setIsLoading(true);
     } else {
-      // Auth state has been determined (either user object or false)
       setIsLoading(false);
     }
   }, [userAuth]);
 
-  // If we've been loading for more than 2 seconds, assume no user is logged in
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading && userAuth === null) {
         setIsLoading(false);
       }
     }, 2000);
-
     return () => clearTimeout(timer);
   }, [isLoading, userAuth]);
 
   useEffect(() => {
-    if (activeSection === 'users' && userAuth?.access_token) {
+    if (location.pathname.includes('users') && userAuth?.access_token) {
       setUserSearchLoading(true);
       axios.get(
         `${import.meta.env.VITE_SERVER_DOMAIN}/api/admin/users`,
@@ -179,7 +187,7 @@ const AdminPanel = () => {
     // else if (activeSection !== 'users') {
     //   setUsers([]);
     // }
-  }, [activeSection, userAuth?.access_token]);
+  }, [location.pathname, userAuth?.access_token]);
 
   // Show loading state while auth is being determined
   if (isLoading) {
@@ -235,34 +243,12 @@ const AdminPanel = () => {
     );
   }
 
-  // For accessibility: close sidebar on section change (mobile)
-  const handleSectionChange = (key) => {
-    setActiveSection(key);
-    setShowSideNav(false);
-    // Map section keys to routes
-    const routeMap = {
-      dashboard: '/admin/dashboard',
-      profile: '/admin/profile',
-      users: '/admin/users',
-      blogs: '/admin/blogs',
-      ads: '/admin/ads',
-      newsletter: '/admin/newsletter',
-      notifications: '/admin/notifications',
-      comments: '/admin/comments',
-      utilities: '/admin/utilities',
-    };
-    if (routeMap[key]) {
-      navigate(routeMap[key]);
-    }
-  };
-
   return (
     <section className="relative flex flex-col md:flex-row gap-0 py-0 m-0 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
       {/* Spacer for navbar height */}
       <div className="h-10 w-full md:hidden" />
-      {/* Mobile Header - Simple responsive header, now below navbar */}
+      {/* Mobile Header */}
       <div className="md:hidden bg-white dark:bg-gray-800 py-1 border-b border-grey dark:border-gray-700 flex flex-nowrap overflow-x-auto z-40 w-full transition-colors duration-300">
-        {/* Menu Button (improved UI for visibility and accessibility) */}
         <button
           className="flex items-center justify-center w-11 h-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white mx-2 transition-colors duration-300"
           style={{ marginLeft: '0.5rem' }}
@@ -274,7 +260,7 @@ const AdminPanel = () => {
           </svg>
         </button>
         <button ref={pageStateTab} className="p-5 capitalize font-bold text-gray-900 dark:text-white" tabIndex={-1}>
-          {sections.find(s => s.key === activeSection)?.label || 'Admin'}
+          {sections.find(s => location.pathname.includes(routeMap[s.key]))?.label || 'Admin'}
         </button>
         <div className="flex items-center gap-2 ml-auto mr-4">
           <ThemeToggle />
@@ -282,7 +268,6 @@ const AdminPanel = () => {
         <hr ref={activeTabLine} className="absolute bottom-0 duration-500 border-gray-200 dark:border-gray-700" />
       </div>
       {/* Sidebar Navigation */}
-      {/* Desktop Sidebar (always visible) */}
       <div className="hidden md:flex flex-col w-full md:w-[260px] min-w-0 md:min-w-[220px] max-w-full md:max-w-[320px] h-auto md:h-[calc(100vh-0px)] sticky top-0 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-30 shadow-sm dark:shadow-lg transition-colors duration-300">
         <div className="flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 mb-3">
           <h1 className="text-xl text-dark-grey dark:text-gray-200 font-gelasio">Admin Panel</h1>
@@ -291,23 +276,23 @@ const AdminPanel = () => {
         <hr className="border-grey dark:border-gray-700 -ml-2 md:-ml-6 mb-4 md:mb-8 mr-2 md:mr-6" />
         <nav className="flex-1 flex flex-col gap-2 py-4 md:py-8 px-2 md:px-4">
           {sections.map((section) => (
-            <button
+            <Link
               key={section.key}
+              to={routeMap[section.key]}
               className={`flex items-center w-full px-3 md:px-5 py-2 md:py-3 my-1 rounded-xl font-medium text-base md:text-lg transition-all duration-150 group relative
-                ${activeSection === section.key
+                ${location.pathname === routeMap[section.key]
                   ? 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-bold shadow-md dark:shadow-lg border-l-4 border-black dark:border-purple'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white'}
               `}
-              onClick={() => handleSectionChange(section.key)}
               tabIndex={0}
-              aria-current={activeSection === section.key ? 'page' : undefined}
+              aria-current={location.pathname === routeMap[section.key] ? 'page' : undefined}
             >
-              <span className={`transition-colors duration-150 ${activeSection === section.key ? 'text-black dark:text-purple' : 'text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white'}`}>{section.icon}</span>
+              <span className={`transition-colors duration-150 ${location.pathname === routeMap[section.key] ? 'text-black dark:text-purple' : 'text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white'}`}>{section.icon}</span>
               {section.label}
-              {activeSection === section.key && (
+              {location.pathname === routeMap[section.key] && (
                 <span className="absolute left-0 top-0 h-full w-1 bg-black dark:bg-purple rounded-r-xl" />
               )}
-            </button>
+            </Link>
           ))}
         </nav>
         <div className="px-2 md:px-4 py-2">
@@ -343,23 +328,24 @@ const AdminPanel = () => {
               <hr className="border-grey dark:border-gray-700 -ml-2 mb-4 mr-2" />
               <nav className="flex-1 flex flex-col gap-2 py-4 px-2">
                 {sections.map((section) => (
-                  <button
+                  <Link
                     key={section.key}
+                    to={routeMap[section.key]}
                     className={`flex items-center w-full px-3 py-2 my-1 rounded-xl font-medium text-base transition-all duration-150 group relative
-                      ${activeSection === section.key
+                      ${location.pathname === routeMap[section.key]
                         ? 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-bold shadow-md dark:shadow-lg border-l-4 border-black dark:border-purple'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white'}
                     `}
-                    onClick={() => handleSectionChange(section.key)}
                     tabIndex={0}
-                    aria-current={activeSection === section.key ? 'page' : undefined}
+                    aria-current={location.pathname === routeMap[section.key] ? 'page' : undefined}
+                    onClick={() => setShowSideNav(false)}
                   >
-                    <span className={`transition-colors duration-150 ${activeSection === section.key ? 'text-black dark:text-purple' : 'text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white'}`}>{section.icon}</span>
+                    <span className={`transition-colors duration-150 ${location.pathname === routeMap[section.key] ? 'text-black dark:text-purple' : 'text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white'}`}>{section.icon}</span>
                     {section.label}
-                    {activeSection === section.key && (
+                    {location.pathname === routeMap[section.key] && (
                       <span className="absolute left-0 top-0 h-full w-1 bg-black dark:bg-purple rounded-r-xl" />
                     )}
-                  </button>
+                  </Link>
                 ))}
               </nav>
               <div className="px-2 py-2">
@@ -382,15 +368,7 @@ const AdminPanel = () => {
       </AnimatePresence>
       {/* Main Content */}
       <main className="flex-1 w-full px-1 xs:px-2 sm:px-3 md:px-8 pt-4 md:pt-8 transition-all duration-300 min-h-screen mt-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-tl-3xl md:rounded-tl-none shadow-inner dark:shadow-none overflow-x-auto">
-        {activeSection === 'dashboard' && <AdminDashboard />}
-        {activeSection === 'profile' && <ProfilePage />}
-        {activeSection === 'users' && <AdminUserTable />}
-        {activeSection === 'blogs' && <BlogManagement />}
-        {activeSection === 'ads' && <AdminAdManagement />}
-        {activeSection === 'newsletter' && <NewsletterManagement />}
-        {activeSection === 'notifications' && <AdminNotifications />}
-        {activeSection === 'comments' && <AdminComments />}
-        {activeSection === 'utilities' && <AdminUtilities />}
+        <Outlet />
       </main>
     </section>
   );

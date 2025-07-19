@@ -2,11 +2,12 @@ import React from "react";
 import AdminUserTableRow from "./AdminUserTableRow";
 
 export default function AdminUserTable({ users, userAuth, actionLoading, superAdmin, handlePromoteDemote, handleActivateDeactivate, handleDeleteUser, selectedUserIds, onSelectUser, onSelectAll }) {
-  // Defensive: filter and log invalid users
-  const validUsers = Array.isArray(users) ? users.filter(u => u && u._id) : [];
+  // Defensive: always use an array
+  const safeUsers = Array.isArray(users) ? users : [];
+  const validUsers = safeUsers.filter(u => u && u._id);
   if (users && Array.isArray(users)) {
     users.forEach((u, i) => { if (!u || !u._id) console.warn('Invalid user at index', i, u); });
-  } else {
+  } else if (users !== undefined) {
     console.warn('users is not an array:', users);
   }
   return (
@@ -18,7 +19,7 @@ export default function AdminUserTable({ users, userAuth, actionLoading, superAd
               <th className="p-4 font-medium">
                 <input
                   type="checkbox"
-                  checked={users.length > 0 && selectedUserIds.length === users.length}
+                  checked={safeUsers.length > 0 && selectedUserIds.length === safeUsers.length}
                   onChange={e => onSelectAll(e.target.checked)}
                   aria-label="Select all users"
                 />

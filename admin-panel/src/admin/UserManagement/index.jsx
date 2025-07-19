@@ -11,6 +11,7 @@ import Loader from '../../components/loader.component.jsx';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import InPageNavigation from '../../components/inpage-navigation.component';
+import Pagination from '../../components/Pagination.jsx';
 
 const FILTERS = [
   { label: 'Active', value: 'active', color: 'bg-green-100 text-green-800' },
@@ -37,6 +38,9 @@ export default function UserManagement() {
   const [myRequestsError, setMyRequestsError] = useState('');
   const [bulkActionError, setBulkActionError] = useState('');
   const isSuperAdmin = userAuth?.super_admin;
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [totalUsers, setTotalUsers] = useState(0);
 
   // Remove logging from tab click handler
   const handleTabChange = (tabIndex) => {
@@ -52,7 +56,7 @@ export default function UserManagement() {
       fetchMyRequests();
     }
     // eslint-disable-next-line
-  }, [userAuth.access_token, isSuperAdmin, activeTab]);
+  }, [userAuth.access_token, isSuperAdmin, activeTab, page, limit]);
 
   useEffect(() => {
     let filtered = users;
@@ -74,11 +78,12 @@ export default function UserManagement() {
     setError(null);
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_SERVER_DOMAIN}/api/admin/users`,
+        `${import.meta.env.VITE_SERVER_DOMAIN}/api/admin/users?page=${page}&limit=${limit}`,
         { headers: { 'Authorization': `Bearer ${userAuth.access_token}` } }
       );
       setUsers(res.data.users || []);
       setFilteredUsers(res.data.users || []);
+      setTotalUsers(res.data.totalUsers || 0);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch users.');
     } finally {
@@ -382,22 +387,30 @@ export default function UserManagement() {
               {(() => {
                 const validFilteredUsers = filteredUsers.filter(u => u && u._id);
                 return (
-                  <AdminUserTable
-                    users={validFilteredUsers}
-                    userAuth={userAuth}
-                    superAdmin={isSuperAdmin}
-                    loading={loading}
-                    error={error}
-                    selectedUserIds={selectedUserIds}
-                    onSelectUser={handleSelectUser}
-                    onSelectAll={handleSelectAll}
-                    handlePromoteDemote={handlePromoteDemote}
-                    handleActivateDeactivate={handleActivateDeactivate}
-                    handleDeleteUser={handleDeleteUser}
-                    actionLoading={actionLoading}
-                    filter={filter}
-                    onFilter={handleFilter}
-                  />
+                  <>
+                    <AdminUserTable
+                      users={validFilteredUsers}
+                      userAuth={userAuth}
+                      superAdmin={isSuperAdmin}
+                      loading={loading}
+                      error={error}
+                      selectedUserIds={selectedUserIds}
+                      onSelectUser={handleSelectUser}
+                      onSelectAll={handleSelectAll}
+                      handlePromoteDemote={handlePromoteDemote}
+                      handleActivateDeactivate={handleActivateDeactivate}
+                      handleDeleteUser={handleDeleteUser}
+                      actionLoading={actionLoading}
+                      filter={filter}
+                      onFilter={handleFilter}
+                    />
+                    <Pagination
+                      page={page}
+                      limit={limit}
+                      total={totalUsers}
+                      onPageChange={setPage}
+                    />
+                  </>
                 );
               })()}
             </div>
