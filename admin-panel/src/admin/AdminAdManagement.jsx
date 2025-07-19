@@ -228,39 +228,41 @@ const AdminAdManagement = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 bg-white dark:bg-black rounded shadow mt-6">
-      <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Ad Management</h1>
+    <div className="w-full max-w-4xl mx-auto p-2 sm:p-4 bg-white dark:bg-black rounded shadow mt-4 sm:mt-6">
+      <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-bold mb-2 sm:mb-4 text-gray-900 dark:text-white">Ad Management</div>
       <div className="mb-6">
         <label className="block font-medium mb-2 text-gray-800 dark:text-white">Upload New Banner Image:</label>
         {previewUrl && (
-          <div className="mb-2 bg-white dark:bg-black p-4 rounded">
-            <img src={previewUrl} alt="Preview" className="w-64 h-auto rounded shadow border mx-auto bg-white dark:bg-black" />
+          <div className="mb-2 bg-white dark:bg-black p-2 sm:p-4 rounded flex justify-center">
+            <img src={previewUrl} alt="Preview" className="w-full max-w-xs sm:w-64 h-auto rounded shadow border bg-white dark:bg-black" />
           </div>
         )}
-        <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} className="text-gray-900 dark:text-white bg-white dark:bg-black" />
-        <button
-          className="ml-2 px-4 py-2 bg-blue-600 dark:bg-black text-white rounded hover:bg-blue-700 dark:hover:bg-gray-900 disabled:opacity-50 border dark:border-white"
-          onClick={handleUpload}
-          disabled={uploading || !selectedFile}
-        >
-          {uploading ? <Loader size="small" /> : "Upload & Save"}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center">
+          <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} className="text-gray-900 dark:text-white bg-white dark:bg-black w-full sm:w-auto" />
+          <button
+            className="px-4 py-2 bg-blue-600 dark:bg-black text-white rounded hover:bg-blue-700 dark:hover:bg-gray-900 disabled:opacity-50 border dark:border-white w-full sm:w-auto"
+            onClick={handleUpload}
+            disabled={uploading || !selectedFile}
+          >
+            {uploading ? <Loader size="small" /> : "Upload & Save"}
+          </button>
+        </div>
       </div>
       {error && <div className="mt-2 text-red dark:text-red">{error}</div>}
       {success && <div className="mt-2 text-green-600 dark:text-green-400">{success}</div>}
       <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">All Ad Banners</h2>
+        <div className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold mb-1 sm:mb-2 text-gray-900 dark:text-white">All Ad Banners</div>
         {selectedBannerIds.length > 0 && (
-          <div className="mb-2 flex gap-2">
+          <div className="mb-2 flex flex-col sm:flex-row gap-2">
             <button
-              className="px-3 py-1 bg-red dark:bg-black text-white rounded disabled:opacity-50 border dark:border-white"
+              className="px-3 py-1 bg-red dark:bg-black text-white rounded disabled:opacity-50 border dark:border-white w-full sm:w-auto"
               onClick={handleBulkDelete}
               disabled={actionLoading === 'bulk-delete'}
             >
               Delete Selected
             </button>
             <button
-              className="px-3 py-1 bg-gray-700 dark:bg-black text-white rounded disabled:opacity-50 border dark:border-white"
+              className="px-3 py-1 bg-gray-700 dark:bg-black text-white rounded disabled:opacity-50 border dark:border-white w-full sm:w-auto"
               onClick={handleBulkHide}
               disabled={actionLoading === 'bulk-hide'}
             >
@@ -275,89 +277,97 @@ const AdminAdManagement = () => {
           <div className="text-gray-600 dark:text-gray-300 italic mb-2">No banners uploaded yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full border text-sm">
+            <table className="min-w-full border text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-100 dark:bg-black">
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">
                     <input
                       type="checkbox"
                       checked={selectedBannerIds.length === banners.length && banners.length > 0}
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Image</th>
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Link</th>
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Visible</th>
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Views</th>
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Clicks</th>
-                  <th className="p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Actions</th>
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Image</th>
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Link</th>
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Visible</th>
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black hidden xs:table-cell">Views</th>
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black hidden xs:table-cell">Clicks</th>
+                  <th className="p-1 sm:p-2 border text-gray-900 dark:text-white bg-gray-100 dark:bg-black">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {banners.map((banner) => (
                   <tr key={banner._id} className={banner.visible ? "bg-green-50 dark:bg-black" : "dark:bg-black"}>
-                    <td className="p-2 border text-center dark:text-white dark:bg-black">
+                    <td className="p-1 sm:p-2 border text-center dark:text-white dark:bg-black">
                       <input
                         type="checkbox"
                         checked={selectedBannerIds.includes(banner._id)}
                         onChange={() => handleSelectBanner(banner._id)}
                       />
                     </td>
-                    <td className="p-2 border dark:text-white dark:bg-black">
-                      <img src={banner.imageUrl} alt="Ad Banner" className="w-32 max-h-24 object-contain rounded border bg-white dark:bg-black" />
+                    <td className="p-1 sm:p-2 border dark:text-white dark:bg-black">
+                      <img src={banner.imageUrl} alt="Ad Banner" className="w-20 sm:w-32 max-h-20 sm:max-h-24 object-contain rounded border bg-white dark:bg-black mx-auto" />
                     </td>
-                    <td className="p-2 border dark:text-white dark:bg-black">
+                    <td className="p-1 sm:p-2 border dark:text-white dark:bg-black max-w-[120px] sm:max-w-xs break-words">
                       {editingLinkId === banner._id ? (
-                        <>
+                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                           <input
                             type="text"
                             value={editingLinkValue}
                             onChange={e => setEditingLinkValue(e.target.value)}
-                            className="border px-2 py-1 rounded w-40 text-gray-900 dark:text-white bg-white dark:bg-black"
+                            className="border px-2 py-1 rounded w-full sm:w-40 text-gray-900 dark:text-white bg-white dark:bg-black"
                           />
                           <button
-                            className="ml-2 px-2 py-1 bg-blue-500 dark:bg-black text-white rounded border dark:border-white"
+                            className="px-2 py-1 bg-blue-500 dark:bg-black text-white rounded border dark:border-white w-full sm:w-auto"
                             onClick={() => handleSaveLink(banner._id)}
                             disabled={actionLoading === banner._id + "-link"}
                           >Save</button>
                           <button
-                            className="ml-2 px-2 py-1 bg-gray-300 dark:bg-black text-gray-900 dark:text-white rounded border dark:border-white"
+                            className="px-2 py-1 bg-gray-300 dark:bg-black text-gray-900 dark:text-white rounded border dark:border-white w-full sm:w-auto"
                             onClick={() => setEditingLinkId(null)}
                           >Cancel</button>
-                        </>
+                        </div>
                       ) : (
-                        <>
-                          <span className="text-gray-800 dark:text-white break-all">{banner.link || <span className="text-gray-400 dark:text-gray-500">(none)</span>}</span>
+                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                          <span className="text-gray-800 dark:text-white break-all" title={banner.link || ''}>
+                            {banner.link
+                              ? banner.link.length > 20
+                                ? banner.link.slice(0, 20) + '...'
+                                : banner.link
+                              : <span className="text-gray-400 dark:text-gray-500">(none)</span>}
+                          </span>
                           <button
-                            className="ml-2 px-2 py-1 bg-yellow-400 dark:bg-black text-gray-900 dark:text-white rounded border dark:border-white"
+                            className="px-2 py-1 bg-yellow-400 dark:bg-black text-gray-900 dark:text-white rounded border dark:border-white w-full sm:w-auto"
                             onClick={() => handleEditLink(banner._id, banner.link)}
                           >Edit</button>
-                        </>
+                        </div>
                       )}
                     </td>
-                    <td className="p-2 border text-center font-bold dark:text-white dark:bg-black">
+                    <td className="p-1 sm:p-2 border text-center font-bold dark:text-white dark:bg-black">
                       {banner.visible ? <span className="text-green-700 dark:text-white">Yes</span> : <span className="text-gray-500 dark:text-white">No</span>}
                     </td>
-                    <td className="p-2 border text-center text-gray-800 dark:text-white dark:bg-black">{banner.views}</td>
-                    <td className="p-2 border text-center text-gray-800 dark:text-white dark:bg-black">{banner.clicks}</td>
-                    <td className="p-2 border dark:text-white dark:bg-black">
-                      {banner.visible ? null : (
+                    <td className="p-1 sm:p-2 border text-center text-gray-800 dark:text-white dark:bg-black hidden xs:table-cell">{banner.views}</td>
+                    <td className="p-1 sm:p-2 border text-center text-gray-800 dark:text-white dark:bg-black hidden xs:table-cell">{banner.clicks}</td>
+                    <td className="p-1 sm:p-2 border dark:text-white dark:bg-black">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {banner.visible ? null : (
+                          <button
+                            className="px-2 py-1 bg-green-500 dark:bg-black text-white rounded border dark:border-white w-full sm:w-auto"
+                            onClick={() => handleSetVisible(banner._id)}
+                            disabled={actionLoading === banner._id + "-visible"}
+                          >Set Visible</button>
+                        )}
                         <button
-                          className="px-2 py-1 bg-green-500 dark:bg-black text-white rounded mr-2 border dark:border-white"
-                          onClick={() => handleSetVisible(banner._id)}
-                          disabled={actionLoading === banner._id + "-visible"}
-                        >Set Visible</button>
-                      )}
-                      <button
-                        className="px-2 py-1 bg-gray-400 dark:bg-black text-white rounded mr-2 border dark:border-white"
-                        onClick={() => handleHide(banner._id)}
-                        disabled={actionLoading === banner._id + "-hide" || !banner.visible}
-                      >Hide</button>
-                      <button
-                        className="px-2 py-1 bg-red dark:bg-black text-white rounded border dark:border-white"
-                        onClick={() => handleDelete(banner._id)}
-                        disabled={actionLoading === banner._id + "-delete"}
-                      >Delete</button>
+                          className="px-2 py-1 bg-gray-400 dark:bg-black text-white rounded border dark:border-white w-full sm:w-auto"
+                          onClick={() => handleHide(banner._id)}
+                          disabled={actionLoading === banner._id + "-hide" || !banner.visible}
+                        >Hide</button>
+                        <button
+                          className="px-2 py-1 bg-red dark:bg-black text-white rounded border dark:border-white w-full sm:w-auto"
+                          onClick={() => handleDelete(banner._id)}
+                          disabled={actionLoading === banner._id + "-delete"}
+                        >Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -368,9 +378,9 @@ const AdminAdManagement = () => {
       </div>
       {/* Analytics Pie Chart for visible banner */}
       <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Visible Banner Analytics</h2>
+        <div className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold mb-1 sm:mb-2 text-gray-900 dark:text-white">Visible Banner Analytics</div>
         {banners.length > 0 && banners.find(b => b.visible) ? (
-          <div className="w-full h-64 flex items-center justify-center">
+          <div className="w-full h-48 sm:h-64 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

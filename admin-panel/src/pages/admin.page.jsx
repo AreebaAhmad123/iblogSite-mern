@@ -244,42 +244,42 @@ const AdminPanel = () => {
   }
 
   return (
-    <section className="relative flex flex-col md:flex-row gap-0 py-0 m-0 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
+    <section className="relative flex flex-col md:flex-row gap-0 py-0 m-0 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden min-w-0">
       {/* Spacer for navbar height */}
-      <div className="h-10 w-full md:hidden" />
+      <div className="h-10 w-full min-w-0 md:hidden" />
       {/* Mobile Header */}
-      <div className="md:hidden bg-white dark:bg-gray-800 py-1 border-b border-grey dark:border-gray-700 flex flex-nowrap overflow-x-auto z-40 w-full transition-colors duration-300">
+      <div className="md:hidden bg-white dark:bg-gray-800 py-1 border-b border-grey dark:border-gray-700 flex flex-nowrap overflow-x-auto z-40 w-full min-w-0 transition-colors duration-300">
         <button
-          className="flex items-center justify-center w-11 h-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white mx-2 transition-colors duration-300"
+          className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white mx-1 sm:mx-2 transition-colors duration-300"
           style={{ marginLeft: '0.5rem' }}
           onClick={() => setShowSideNav(true)}
           aria-label="Open menu"
         >
-          <svg className="w-7 h-7 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 text-gray-800 dark:text-gray-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <button ref={pageStateTab} className="p-5 capitalize font-bold text-gray-900 dark:text-white" tabIndex={-1}>
+        <button ref={pageStateTab} className="px-2 py-2 sm:p-5 capitalize font-bold text-gray-900 dark:text-white truncate max-w-[40vw] xs:max-w-[60vw] text-sm sm:text-base" tabIndex={-1}>
           {sections.find(s => location.pathname.includes(routeMap[s.key]))?.label || 'Admin'}
         </button>
-        <div className="flex items-center gap-2 ml-auto mr-4">
+        <div className="flex items-center gap-1 sm:gap-2 ml-auto mr-2 sm:mr-4">
           <ThemeToggle />
         </div>
         <hr ref={activeTabLine} className="absolute bottom-0 duration-500 border-gray-200 dark:border-gray-700" />
       </div>
       {/* Sidebar Navigation */}
-      <div className="hidden md:flex flex-col w-full md:w-[260px] min-w-0 md:min-w-[220px] max-w-full md:max-w-[320px] h-auto md:h-[calc(100vh-0px)] sticky top-0 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-30 shadow-sm dark:shadow-lg transition-colors duration-300">
-        <div className="flex items-center justify-between px-4 md:px-8 pt-4 md:pt-8 mb-3">
-          <h1 className="text-xl text-dark-grey dark:text-gray-200 font-gelasio">Admin Panel</h1>
+      <div className="hidden md:flex flex-col w-full md:w-[200px] lg:w-[260px] min-w-0 md:min-w-[120px] lg:min-w-[220px] max-w-full md:max-w-[320px] h-auto md:h-[calc(100vh-0px)] sticky top-0 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-30 shadow-sm dark:shadow-lg transition-colors duration-300">
+        <div className="flex items-center justify-between px-2 sm:px-4 md:px-8 pt-4 md:pt-8 mb-3">
+          <h1 className="text-lg sm:text-xl text-dark-grey dark:text-gray-200 font-gelasio truncate">Admin Panel</h1>
           <ThemeToggle />
         </div>
         <hr className="border-grey dark:border-gray-700 -ml-2 md:-ml-6 mb-4 md:mb-8 mr-2 md:mr-6" />
-        <nav className="flex-1 flex flex-col gap-2 py-4 md:py-8 px-2 md:px-4">
+        <nav className="flex-1 flex flex-col gap-2 py-4 md:py-8 px-1 sm:px-2 md:px-4 min-w-0">
           {sections.map((section) => (
             <Link
               key={section.key}
               to={routeMap[section.key]}
-              className={`flex items-center w-full px-3 md:px-5 py-2 md:py-3 my-1 rounded-xl font-medium text-base md:text-lg transition-all duration-150 group relative
+              className={`flex items-center w-full px-2 sm:px-3 md:px-5 py-2 md:py-3 my-1 rounded-xl font-medium text-sm md:text-base lg:text-lg transition-all duration-150 group relative
                 ${location.pathname === routeMap[section.key]
                   ? 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white font-bold shadow-md dark:shadow-lg border-l-4 border-black dark:border-purple'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white'}
@@ -287,8 +287,8 @@ const AdminPanel = () => {
               tabIndex={0}
               aria-current={location.pathname === routeMap[section.key] ? 'page' : undefined}
             >
-              <span className={`transition-colors duration-150 ${location.pathname === routeMap[section.key] ? 'text-black dark:text-purple' : 'text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white'}`}>{section.icon}</span>
-              {section.label}
+              <span className={`transition-colors duration-150 flex-shrink-0 ${location.pathname === routeMap[section.key] ? 'text-black dark:text-purple' : 'text-gray-400 dark:text-gray-500 group-hover:text-black dark:group-hover:text-white'}`}>{section.icon}</span>
+              <span className="truncate">{section.label}</span>
               {location.pathname === routeMap[section.key] && (
                 <span className="absolute left-0 top-0 h-full w-1 bg-black dark:bg-purple rounded-r-xl" />
               )}
@@ -298,7 +298,7 @@ const AdminPanel = () => {
         <div className="px-2 md:px-4 py-2">
           <LogoutButton />
         </div>
-        <div className="mt-auto py-4 md:py-6 px-4 md:px-8 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500">&copy; {new Date().getFullYear()} IslamicStories Admin</div>
+        <div className="mt-auto py-4 md:py-6 px-2 sm:px-4 md:px-8 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500 truncate">&copy; {new Date().getFullYear()} IslamicStories Admin</div>
       </div>
       {/* Mobile Sidebar (animated) */}
       <AnimatePresence>
@@ -367,7 +367,7 @@ const AdminPanel = () => {
         )}
       </AnimatePresence>
       {/* Main Content */}
-      <main className="flex-1 w-full px-1 xs:px-2 sm:px-3 md:px-8 pt-4 md:pt-8 transition-all duration-300 min-h-screen mt-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-tl-3xl md:rounded-tl-none shadow-inner dark:shadow-none overflow-x-auto">
+      <main className="flex-1 w-full min-w-0 px-1 xs:px-2 sm:px-3 md:px-8 pt-4 md:pt-8 transition-all duration-300 min-h-screen mt-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-tl-3xl md:rounded-tl-none shadow-inner dark:shadow-none overflow-x-auto">
         <Outlet />
       </main>
     </section>

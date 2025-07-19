@@ -34,12 +34,8 @@ const BlogInteraction = () => {
         } = {}
     } = blog || {};
 
-    const {
-        userAuth: {
-            username = "", 
-            access_token = ""
-        } = {}
-    } = useContext(UserContext) || {};
+    const username = userAuth?.username || "";
+    const access_token = userAuth?.access_token || "";
 
     useEffect(() => {
         console.log("BlogInteraction mounted");

@@ -379,6 +379,25 @@ export default function UserManagement() {
                   {bulkActionError && <div className="mt-2 text-red-600">{bulkActionError}</div>}
                 </div>
               )}
+              {/* User Status Filters */}
+              <div className="flex gap-2 mb-3">
+                {FILTERS.map(f => (
+                  <button
+                    key={f.value}
+                    className={`px-3 py-1 rounded-full font-medium border transition
+                      ${filter === f.value
+                        ? 'bg-black text-white border-black'
+                        : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'}
+                      dark:${filter === f.value
+                        ? 'bg-white text-black border-white'
+                        : 'bg-[#3a3a3a] text-gray-200 border-gray-600 hover:bg-gray-700'}
+                    `}
+                    onClick={() => setFilter(f.value)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
               <div className="w-full overflow-x-auto">
                 <AdminUserSearchBar value={search} onChange={handleSearch} />
               </div>

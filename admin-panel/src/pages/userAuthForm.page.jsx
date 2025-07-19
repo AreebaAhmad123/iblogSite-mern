@@ -223,12 +223,10 @@ const UserAuthForm = () => {
       <section className="h-cover flex items-center justify-center px-2 sm:px-0">
         <Toaster />
         <form id="formElement" className="w-full max-w-[400px] bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-8 flex flex-col relative" onSubmit={handleSubmit}>
-          <div className="absolute top-4 right-4">
+          <div className="flex items-center justify-between mb-8 sm:mb-12">
+            <span className="text-2xl sm:text-4xl font-gelasio text-gray-900 dark:text-gray-100">Admin Panel</span>
             <ThemeToggle />
           </div>
-          <h1 className="text-2xl sm:text-4xl font-gelasio capitalize text-center mb-10 sm:mb-24 w-full text-gray-900 dark:text-gray-100">
-            Admin Panel Login
-          </h1>
           {infoMsg && (
             <div className="mb-4 text-green-700 dark:text-green-400 text-center text-sm sm:text-base w-full">{infoMsg}</div>
           )}
