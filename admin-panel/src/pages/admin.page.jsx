@@ -17,6 +17,7 @@ import { Navigate, useNavigate, Outlet } from 'react-router-dom';
 import AdminDashboard from '../admin/AdminDashboard.jsx';
 import axios from 'axios';
 import ProfilePage from './profile.page.jsx';
+import AdminAdManagement from '../admin/AdminAdManagement.jsx';
 
 const sections = [
   {
@@ -48,6 +49,13 @@ const sections = [
     ),
   },
   {
+    key: 'ads',
+    label: 'Ad Management',
+    icon: (
+      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4z" fill="currentColor"/><text x="8" y="16" fontSize="8" fill="#fff">Ad</text></svg>
+    ),
+  },
+  {
     key: 'newsletter',
     label: 'Newsletter',
     icon: (
@@ -72,7 +80,7 @@ const sections = [
     key: 'utilities',
     label: 'Utilities',
     icon: (
-      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none"><path d="M19.14 12.94a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12l-2.12-2.12a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12l-2.12-2.12a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12l-2.12-2.12a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12z" fill="currentColor"/></svg>
+      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none"><path d="M19.14 12.94a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12l-2.12-2.12a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12l-2.12-2.12a1.5 1.5 0 00-2.12 0l-1.42 1.42-2.12-2.12 1.42-1.42a1.5 1.5 0 000-2.12z" fill="currentColor"/></svg>
     ),
   },
 ];
@@ -237,6 +245,7 @@ const AdminPanel = () => {
       profile: '/admin/profile',
       users: '/admin/users',
       blogs: '/admin/blogs',
+      ads: '/admin/ads',
       newsletter: '/admin/newsletter',
       notifications: '/admin/notifications',
       comments: '/admin/comments',
@@ -373,7 +382,15 @@ const AdminPanel = () => {
       </AnimatePresence>
       {/* Main Content */}
       <main className="flex-1 w-full px-1 xs:px-2 sm:px-3 md:px-8 pt-4 md:pt-8 transition-all duration-300 min-h-screen mt-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-tl-3xl md:rounded-tl-none shadow-inner dark:shadow-none overflow-x-auto">
-        <Outlet />
+        {activeSection === 'dashboard' && <AdminDashboard />}
+        {activeSection === 'profile' && <ProfilePage />}
+        {activeSection === 'users' && <AdminUserTable />}
+        {activeSection === 'blogs' && <BlogManagement />}
+        {activeSection === 'ads' && <AdminAdManagement />}
+        {activeSection === 'newsletter' && <NewsletterManagement />}
+        {activeSection === 'notifications' && <AdminNotifications />}
+        {activeSection === 'comments' && <AdminComments />}
+        {activeSection === 'utilities' && <AdminUtilities />}
       </main>
     </section>
   );

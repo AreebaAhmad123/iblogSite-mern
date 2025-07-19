@@ -31,6 +31,7 @@ import {
 import AnimatedNavButton from "../components/animated-nav-button.component.jsx";
 import SmoothLoader from "../components/smooth-loader.component.jsx";
 import SkeletonLoader from "../components/skeleton-loader.component.jsx";
+import AdBanner from "../components/AdBanner";
 
 const HomePage = () => {
     let [blogs, setBlog] = useState(null);
@@ -524,6 +525,8 @@ const HomePage = () => {
                     }
                 </motion.div>
 
+                {/* Ad Banner above Popular Posts */}
+                <AdBanner />
                 {/* Popular Posts */}
                 <div className="w-full">
                     <div className="flex items-center justify-between mb-8">

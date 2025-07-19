@@ -36,6 +36,7 @@ import Contact from './Schema/Contact.js'
 import AdminStatusChangeRequest from './Schema/AdminStatusChangeRequest.js'
 import MaintenanceLog from './Schema/MaintenanceLog.js';
 import SystemHealthLog from './Schema/SystemHealthLog.js';
+import AdBanner from './Schema/AdBanner.js';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -4235,3 +4236,169 @@ function getCSRFCookieOptions() {
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   };
 }
+
+// --- Ad Banner API ---
+
+// Get current ad banner (public)
+server.get('/api/ad-banner', async (req, res) => {
+  try {
+    const banner = await AdBanner.findOne({ visible: true }).sort({ updatedAt: -1 });
+    if (!banner) return res.status(404).json({ success: false, error: 'No ad banner found.' });
+    res.json({ success: true, banner });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
+// Middleware: check admin (reuse existing or simple check)
+const isAdmin = (req, res, next) => {
+  if (req.user && (req.user.admin || req.user.super_admin)) return next();
+  return res.status(403).json({ success: false, error: 'Admin access required.' });
+};
+
+// List all ad banners (admin only)
+server.get('/api/admin/ad-banners', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const banners = await AdBanner.find({}).sort({ updatedAt: -1 });
+    res.json({ success: true, banners });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
+// Set/create ad banner (admin only)
+server.post('/api/admin/ad-banner', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { imageUrl, link, visible } = req.body;
+    if (!imageUrl) return res.status(400).json({ success: false, error: 'Image URL required.' });
+    if (link && !/^https?:\/\/.+/.test(link)) return res.status(400).json({ success: false, error: 'Invalid link URL.' });
+    // If visible is true, set all others to visible: false
+    if (visible !== false) {
+      await AdBanner.updateMany({ visible: true }, { visible: false });
+    }
+    const banner = new AdBanner({ imageUrl, link: link || '', visible: visible !== false });
+    await banner.save();
+    res.json({ success: true, banner });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
+// Update ad banner (admin only)
+server.put('/api/admin/ad-banner/:id', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl, link, visible } = req.body;
+    const update = {};
+    if (imageUrl) update.imageUrl = imageUrl;
+    if (link !== undefined) {
+      if (link && !/^https?:\/\/.+/.test(link)) return res.status(400).json({ success: false, error: 'Invalid link URL.' });
+      update.link = link;
+    }
+    if (visible !== undefined) {
+      if (visible) {
+        // Hide all other banners
+        await AdBanner.updateMany({ visible: true }, { visible: false });
+      }
+      update.visible = visible;
+    }
+    update.updatedAt = Date.now();
+    const banner = await AdBanner.findByIdAndUpdate(id, update, { new: true });
+    if (!banner) return res.status(404).json({ success: false, error: 'Banner not found.' });
+    res.json({ success: true, banner });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
+// Hide ad banner (admin only)
+server.patch('/api/admin/ad-banner/:id/hide', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const banner = await AdBanner.findById(id);
+    if (!banner) return res.status(404).json({ success: false, error: 'Banner not found.' });
+    // Delete image from Cloudinary
+    await deleteCloudinaryImage(banner.imageUrl);
+    banner.visible = false;
+    banner.updatedAt = Date.now();
+    await banner.save();
+    res.json({ success: true, banner });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
+// Delete ad banner (admin only)
+server.delete('/api/admin/ad-banner/:id', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const banner = await AdBanner.findByIdAndDelete(id);
+    if (!banner) return res.status(404).json({ success: false, error: 'Banner not found.' });
+    // Delete image from Cloudinary
+    await deleteCloudinaryImage(banner.imageUrl);
+    res.json({ success: true, banner });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+
+// Helper to delete Cloudinary image by URL
+async function deleteCloudinaryImage(imageUrl) {
+  if (imageUrl && imageUrl.includes('cloudinary.com')) {
+    try {
+      // Extract public_id from the URL
+      const matches = imageUrl.match(/\/([^\/]+)\.(jpg|jpeg|png|gif|webp)$/i);
+      if (matches && matches[1]) {
+        const publicId = matches[1];
+        await cloudinary.uploader.destroy(publicId);
+      }
+    } catch (imgErr) {
+      console.error('Failed to delete ad banner image from Cloudinary:', imgErr);
+    }
+  }
+}
+
+// Rate limiters for ad banner analytics
+const adBannerViewLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 requests per minute
+  message: { error: 'Too many ad banner view requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const adBannerClickLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 requests per minute
+  message: { error: 'Too many ad banner click requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Increment ad banner views
+server.patch('/api/ad-banner/view', adBannerViewLimiter, async (req, res) => {
+  try {
+    const banner = await AdBanner.findOneAndUpdate(
+      { visible: true },
+      { $inc: { views: 1 } },
+      { new: true, sort: { updatedAt: -1 } }
+    );
+    if (!banner) return res.status(404).json({ success: false, error: 'No ad banner found.' });
+    res.json({ success: true, views: banner.views });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
+// Increment ad banner clicks
+server.patch('/api/ad-banner/click', adBannerClickLimiter, async (req, res) => {
+  try {
+    const banner = await AdBanner.findOneAndUpdate(
+      { visible: true },
+      { $inc: { clicks: 1 } },
+      { new: true, sort: { updatedAt: -1 } }
+    );
+    if (!banner) return res.status(404).json({ success: false, error: 'No ad banner found.' });
+    res.json({ success: true, clicks: banner.clicks });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Server error.' });
+  }
+});
