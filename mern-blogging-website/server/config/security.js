@@ -1,5 +1,7 @@
 // Security configuration for Islamic Stories Blog
 import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
+import { body, validationResult } from 'express-validator';
 
 export const securityConfig = {
     // JWT Configuration
@@ -194,7 +196,6 @@ export const createSecurityMiddleware = () => {
     return {
         // Rate limiting middleware
         rateLimit: (options = {}) => {
-            const rateLimit = require('express-rate-limit');
             return rateLimit({
                 windowMs: options.windowMs || securityConfig.rateLimit.windowMs,
                 max: options.max || securityConfig.rateLimit.max,
@@ -206,7 +207,6 @@ export const createSecurityMiddleware = () => {
 
         // Input validation middleware
         validateInput: (schema) => {
-            const { body, validationResult } = require('express-validator');
             return [
                 ...schema,
                 (req, res, next) => {
