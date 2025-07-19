@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const AdBannerSchema = new mongoose.Schema({
   imageUrl: {
@@ -27,4 +27,5 @@ const AdBannerSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('AdBanner', AdBannerSchema); 
+const AdBanner = mongoose.model('AdBanner', AdBannerSchema);
+export default AdBanner; 
